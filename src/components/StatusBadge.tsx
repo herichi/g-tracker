@@ -11,10 +11,21 @@ interface StatusBadgeProps {
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status, pulse = false, className }) => {
   const getStatusClass = () => {
-    // Panel statuses
-    if (status === "manufactured") return "status-badge-info";
+    // Panel statuses from workflow
+    if (status === "issued") return "status-badge-info";
+    if (status === "held") return "status-badge-warning";
+    if (status === "produced") return "status-badge-info";
+    if (status === "prepared") return "status-badge-pending";
     if (status === "delivered") return "status-badge-pending";
+    if (status === "returned") return "status-badge-warning";
+    if (status === "rejected_material") return "status-badge-error";
+    if (status === "approved") return "status-badge-success";
     if (status === "installed") return "status-badge-warning";
+    if (status === "checked") return "status-badge-info";
+    if (status === "approved_final") return "status-badge-success";
+    
+    // Original statuses
+    if (status === "manufactured") return "status-badge-info";
     if (status === "inspected") return "status-badge-success";
     if (status === "rejected") return "status-badge-error";
     
@@ -27,7 +38,11 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, pulse = false, classN
   };
   
   const getStatusLabel = () => {
-    return status.charAt(0).toUpperCase() + status.slice(1).replace(/-/g, " ");
+    // Convert underscores to spaces and capitalize each word
+    return status
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
   return (

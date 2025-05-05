@@ -13,7 +13,21 @@ export interface Project {
   panelCount: number;
 }
 
-export type PanelStatus = 'manufactured' | 'delivered' | 'installed' | 'inspected' | 'rejected';
+export type PanelStatus = 
+  | 'manufactured' 
+  | 'delivered' 
+  | 'installed' 
+  | 'inspected' 
+  | 'rejected' 
+  | 'issued' 
+  | 'held' 
+  | 'produced' 
+  | 'prepared' 
+  | 'returned'
+  | 'rejected_material'
+  | 'approved'
+  | 'checked'
+  | 'approved_final';
 
 export interface Panel {
   id: string;
@@ -33,6 +47,7 @@ export interface Panel {
   installedDate?: string;
   inspectedDate?: string;
   notes?: string;
+  qrCode?: string;
 }
 
 export interface PanelStatusCount {
