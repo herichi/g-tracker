@@ -25,7 +25,7 @@ export type PanelStatus =
   | 'prepared' 
   | 'returned'
   | 'rejected_material'
-  | 'approved'
+  | 'approved_material'
   | 'checked'
   | 'approved_final'
   | 'cancelled'

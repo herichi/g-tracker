@@ -20,7 +20,6 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, pulse = false, classN
     if (status === "prepared") return "status-badge-pending";
     if (status === "delivered") return "status-badge-pending";
     if (status === "broken_site") return "status-badge-error";
-    if (status === "returned") return "status-badge-warning";
     if (status === "rejected_material") return "status-badge-error";
     if (status === "approved_material") return "status-badge-success";
     if (status === "installed") return "status-badge-warning";
