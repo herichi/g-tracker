@@ -14,12 +14,15 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, pulse = false, classN
     // Panel statuses from workflow
     if (status === "issued") return "status-badge-info";
     if (status === "held") return "status-badge-warning";
+    if (status === "cancelled") return "status-badge-error";
     if (status === "produced") return "status-badge-info";
+    if (status === "proceed_delivery") return "status-badge-info";
     if (status === "prepared") return "status-badge-pending";
     if (status === "delivered") return "status-badge-pending";
+    if (status === "broken_site") return "status-badge-error";
     if (status === "returned") return "status-badge-warning";
     if (status === "rejected_material") return "status-badge-error";
-    if (status === "approved") return "status-badge-success";
+    if (status === "approved_material") return "status-badge-success";
     if (status === "installed") return "status-badge-warning";
     if (status === "checked") return "status-badge-info";
     if (status === "approved_final") return "status-badge-success";

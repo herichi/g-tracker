@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { 
   ArrowLeft, Building, Box, Calendar, 
   Ruler, Scale, Edit, Trash2, Clipboard, 
-  QrCode, AlertTriangle
+  QrCode, AlertTriangle, User, Camera,
+  Package, Truck, Factory, ShieldCheck, Hammer,
+  Search, ClipboardCheck, ClipboardX, X, Check 
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
@@ -27,7 +29,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PanelStatus } from "@/types";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
+import { PanelStatus, UserRole, ROLE_STATUS_MAPPING, getRoleNameForDisplay } from "@/types";
 
 const PanelDetail: React.FC = () => {
   const { panelId } = useParams<{ panelId: string }>();
@@ -36,6 +44,7 @@ const PanelDetail: React.FC = () => {
   const [newStatus, setNewStatus] = useState<PanelStatus | ''>('');
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
   
   const panel = panels.find(p => p.id === panelId);
   const project = panel ? projects.find(p => p.id === panel.projectId) : null;
@@ -82,7 +91,7 @@ const PanelDetail: React.FC = () => {
     // Update dates based on status
     const now = new Date().toISOString().split('T')[0];
     
-    if (newStatus === 'delivered' && !updatedPanel.deliveredDate) {
+    if ((newStatus === 'delivered' || newStatus === 'proceed_delivery') && !updatedPanel.deliveredDate) {
       updatedPanel.deliveredDate = now;
     }
     
@@ -90,10 +99,25 @@ const PanelDetail: React.FC = () => {
       updatedPanel.installedDate = now;
     }
     
-    if ((newStatus === 'inspected' || newStatus === 'rejected' || 
-         newStatus === 'checked' || newStatus === 'approved_final') && 
-        !updatedPanel.inspectedDate) {
+    if ((newStatus === 'inspected' || newStatus === 'rejected_material' || 
+         newStatus === 'checked' || newStatus === 'approved_material' || 
+         newStatus === 'approved_final') && !updatedPanel.inspectedDate) {
       updatedPanel.inspectedDate = now;
+    }
+    
+    // Add to status history if it exists
+    if (updatedPanel.statusHistory) {
+      updatedPanel.statusHistory.push({
+        status: newStatus,
+        date: now,
+        updatedBy: getRoleNameForDisplay(selectedRole)
+      });
+    } else {
+      updatedPanel.statusHistory = [{
+        status: newStatus,
+        date: now,
+        updatedBy: getRoleNameForDisplay(selectedRole)
+      }];
     }
     
     updatePanel(updatedPanel);
@@ -109,36 +133,68 @@ const PanelDetail: React.FC = () => {
   // Generate QR code data (in a real app, this would be a proper QR code data)
   const qrCodeData = panel.qrCode || `https://panels.dohaextraco.com/panel/${panel.id}`;
 
-  // Define available status transitions based on current status
-  const getAvailableStatuses = (): PanelStatus[] => {
-    switch (panel.status) {
-      case 'issued':
-        return ['held', 'produced'];
-      case 'held':
-        return ['produced'];
-      case 'produced':
-        return ['prepared'];
-      case 'prepared':
-        return ['delivered'];
-      case 'delivered':
-        return ['returned', 'approved'];
-      case 'returned':
-        return ['rejected_material'];
-      case 'approved':
-        return ['installed'];
-      case 'installed':
-        return ['checked'];
-      case 'checked':
-        return ['approved_final', 'rejected'];
-      case 'manufactured':
-        return ['delivered'];
-      case 'delivered':
-        return ['installed'];
-      case 'installed':
-        return ['inspected', 'rejected'];
-      default:
-        return [];
+  // Get status icon
+  const getStatusIcon = (status: PanelStatus) => {
+    switch (status) {
+      case 'issued': return <Box className="h-4 w-4" />;
+      case 'held': return <AlertTriangle className="h-4 w-4" />;
+      case 'cancelled': return <X className="h-4 w-4" />;
+      case 'produced': return <Factory className="h-4 w-4" />;
+      case 'proceed_delivery': return <Package className="h-4 w-4" />;
+      case 'delivered': return <Truck className="h-4 w-4" />;
+      case 'broken_site': return <AlertTriangle className="h-4 w-4" />;
+      case 'approved_material': return <Check className="h-4 w-4" />;
+      case 'rejected_material': return <X className="h-4 w-4" />;
+      case 'installed': return <Hammer className="h-4 w-4" />;
+      case 'checked': return <Search className="h-4 w-4" />;
+      case 'inspected': return <ShieldCheck className="h-4 w-4" />;
+      case 'approved_final': return <ClipboardCheck className="h-4 w-4" />;
+      case 'rejected': return <ClipboardX className="h-4 w-4" />;
+      case 'manufactured': return <Factory className="h-4 w-4" />;
+      default: return <Box className="h-4 w-4" />;
     }
+  };
+
+  // Define available status transitions based on current status and role
+  const getAvailableStatuses = (): PanelStatus[] => {
+    const roleMapping = ROLE_STATUS_MAPPING.find(mapping => mapping.role === selectedRole);
+    if (!roleMapping) return [];
+    
+    // For admin, show next logical statuses based on workflow
+    if (selectedRole === 'admin') {
+      switch (panel.status) {
+        case 'issued':
+          return ['held', 'produced', 'cancelled'];
+        case 'held':
+          return ['issued', 'produced', 'cancelled'];
+        case 'produced':
+          return ['proceed_delivery'];
+        case 'proceed_delivery':
+          return ['delivered', 'broken_site'];
+        case 'delivered':
+          return ['approved_material', 'rejected_material'];
+        case 'approved_material':
+          return ['installed'];
+        case 'installed':
+          return ['checked'];
+        case 'checked':
+          return ['inspected'];
+        case 'inspected':
+          return ['approved_final', 'rejected_material'];
+        case 'manufactured':
+          return ['issued', 'delivered'];
+        default:
+          return roleMapping.allowedStatuses;
+      }
+    }
+    
+    // For other roles, only show statuses allowed for that role
+    return roleMapping.allowedStatuses;
+  };
+
+  // Determine if a panel is in a terminal state
+  const isTerminalState = (status: PanelStatus): boolean => {
+    return ['rejected_material', 'approved_final', 'cancelled', 'broken_site'].includes(status);
   };
 
   return (
@@ -315,118 +371,182 @@ const PanelDetail: React.FC = () => {
             <CardTitle className="text-lg">Status Timeline</CardTitle>
           </CardHeader>
           <CardContent>
-            <ol className="relative border-l border-gray-200 ml-3">
-              <li className="mb-6 ml-6">
-                <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-info rounded-full -left-3 ring-8 ring-white">
-                  <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
-                </span>
-                <h3 className="flex items-center mb-1 text-sm font-semibold">Manufactured</h3>
-                <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
-                  {panel.manufacturedDate}
-                </time>
-              </li>
+            <Tabs defaultValue="timeline">
+              <TabsList className="mb-4 w-full">
+                <TabsTrigger value="timeline" className="flex-1">Timeline</TabsTrigger>
+                <TabsTrigger value="update" className="flex-1">Update Status</TabsTrigger>
+              </TabsList>
               
-              {panel.deliveredDate && (
-                <li className="mb-6 ml-6">
-                  <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-pending rounded-full -left-3 ring-8 ring-white">
-                    <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
-                  </span>
-                  <h3 className="flex items-center mb-1 text-sm font-semibold">Delivered</h3>
-                  <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
-                    {panel.deliveredDate}
-                  </time>
-                </li>
-              )}
-              
-              {panel.installedDate && (
-                <li className="mb-6 ml-6">
-                  <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-warning rounded-full -left-3 ring-8 ring-white">
-                    <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
-                  </span>
-                  <h3 className="flex items-center mb-1 text-sm font-semibold">Installed</h3>
-                  <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
-                    {panel.installedDate}
-                  </time>
-                </li>
-              )}
-              
-              {panel.inspectedDate && (
-                <li className="ml-6">
-                  <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-success rounded-full -left-3 ring-8 ring-white">
-                    <div className="w-2.5 h-2.5 bg-white rounded-full"></div>
-                  </span>
-                  <h3 className="flex items-center mb-1 text-sm font-semibold">
-                    {panel.status === 'inspected' ? 'Inspected' : 
-                     panel.status === 'rejected' ? 'Rejected' :
-                     panel.status === 'approved_final' ? 'Approved Final' :
-                     panel.status === 'checked' ? 'Checked' : panel.status}
-                  </h3>
-                  <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
-                    {panel.inspectedDate}
-                  </time>
-                </li>
-              )}
-            </ol>
-            
-            {getAvailableStatuses().length > 0 && (
-              <div className="mt-6 text-center">
-                <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-construction-blue hover:bg-construction-blue-dark">
-                      Update Status
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Update Panel Status</DialogTitle>
-                      <DialogDescription>
-                        Choose a new status for panel {panel.serialNumber}
-                      </DialogDescription>
-                    </DialogHeader>
-                    
-                    {panel.status === 'rejected' || panel.status === 'rejected_material' || panel.status === 'approved_final' ? (
-                      <div className="flex items-center p-4 text-amber-800 bg-amber-50 rounded-md">
-                        <AlertTriangle className="h-5 w-5 mr-2 text-amber-600" />
-                        <p>This panel is in a final state and cannot be updated further.</p>
+              <TabsContent value="timeline">
+                <ol className="relative border-l border-gray-200 ml-3">
+                  <li className="mb-6 ml-6">
+                    <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-info rounded-full -left-3 ring-8 ring-white">
+                      <Factory className="w-3 h-3 text-white" />
+                    </span>
+                    <h3 className="flex items-center mb-1 text-sm font-semibold">Manufactured</h3>
+                    <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
+                      {panel.manufacturedDate}
+                    </time>
+                  </li>
+                  
+                  {/* Display status history if available */}
+                  {panel.statusHistory?.filter(history => history.status !== 'manufactured').map((history, index) => (
+                    <li key={index} className="mb-6 ml-6">
+                      <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-info rounded-full -left-3 ring-8 ring-white">
+                        {getStatusIcon(history.status)}
+                      </span>
+                      <div className="flex items-center mb-1">
+                        <span className="text-sm font-semibold mr-2">
+                          {history.status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                        </span>
+                        <StatusBadge status={history.status} />
                       </div>
-                    ) : (
-                      <>
-                        <div className="grid gap-4 py-4">
-                          <Select value={newStatus} onValueChange={(value) => setNewStatus(value as PanelStatus)}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select new status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getAvailableStatuses().map(status => (
-                                <SelectItem key={status} value={status}>
-                                  <div className="flex items-center">
-                                    <StatusBadge status={status} className="mr-2" />
-                                    <span>
-                                      {status.split('_').map(word => 
-                                        word.charAt(0).toUpperCase() + word.slice(1)
-                                      ).join(' ')}
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                      <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
+                        {history.date}
+                      </time>
+                      {history.updatedBy && (
+                        <p className="text-xs text-gray-500 mb-1">
+                          <User className="inline h-3 w-3 mr-1" /> {history.updatedBy}
+                        </p>
+                      )}
+                      {history.notes && (
+                        <p className="text-xs text-gray-600 mb-1">{history.notes}</p>
+                      )}
+                      {history.photoUrl && (
+                        <div className="mt-2 rounded overflow-hidden w-full max-w-[150px]">
+                          <img src={history.photoUrl} alt={`Status update for ${history.status}`} className="w-full h-auto" />
                         </div>
-                        
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button type="submit" onClick={handleStatusUpdate}>
-                            Update Status
-                          </Button>
-                        </DialogFooter>
-                      </>
-                    )}
-                  </DialogContent>
-                </Dialog>
-              </div>
-            )}
+                      )}
+                    </li>
+                  ))}
+                  
+                  {/* Default status timeline elements if no history */}
+                  {!panel.statusHistory && (
+                    <>
+                      {panel.deliveredDate && (
+                        <li className="mb-6 ml-6">
+                          <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-pending rounded-full -left-3 ring-8 ring-white">
+                            <Truck className="w-3 h-3 text-white" />
+                          </span>
+                          <h3 className="flex items-center mb-1 text-sm font-semibold">Delivered</h3>
+                          <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
+                            {panel.deliveredDate}
+                          </time>
+                        </li>
+                      )}
+                      
+                      {panel.installedDate && (
+                        <li className="mb-6 ml-6">
+                          <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-warning rounded-full -left-3 ring-8 ring-white">
+                            <Hammer className="w-3 h-3 text-white" />
+                          </span>
+                          <h3 className="flex items-center mb-1 text-sm font-semibold">Installed</h3>
+                          <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
+                            {panel.installedDate}
+                          </time>
+                        </li>
+                      )}
+                      
+                      {panel.inspectedDate && (
+                        <li className="ml-6">
+                          <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-success rounded-full -left-3 ring-8 ring-white">
+                            <ShieldCheck className="w-3 h-3 text-white" />
+                          </span>
+                          <h3 className="flex items-center mb-1 text-sm font-semibold">
+                            {panel.status === 'inspected' ? 'Inspected' : 
+                             panel.status === 'rejected' ? 'Rejected' :
+                             panel.status === 'approved_final' ? 'Approved Final' :
+                             panel.status === 'checked' ? 'Checked' : panel.status}
+                          </h3>
+                          <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
+                            {panel.inspectedDate}
+                          </time>
+                        </li>
+                      )}
+                    </>
+                  )}
+                </ol>
+              </TabsContent>
+              
+              <TabsContent value="update">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Select your role</label>
+                    <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as UserRole)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select your role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLE_STATUS_MAPPING.map(mapping => (
+                          <SelectItem key={mapping.role} value={mapping.role}>
+                            <div className="flex items-center">
+                              <User className="mr-2 h-4 w-4" />
+                              <span>{getRoleNameForDisplay(mapping.role)}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {isTerminalState(panel.status) ? (
+                    <div className="flex items-center p-4 text-amber-800 bg-amber-50 rounded-md">
+                      <AlertTriangle className="h-5 w-5 mr-2 text-amber-600" />
+                      <p>This panel is in a final state and cannot be updated further.</p>
+                    </div>
+                  ) : getAvailableStatuses().length === 0 ? (
+                    <div className="flex items-center p-4 text-blue-800 bg-blue-50 rounded-md">
+                      <AlertTriangle className="h-5 w-5 mr-2 text-blue-600" />
+                      <p>Your selected role cannot update this panel's status.</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium mb-1 block">Select new status</label>
+                        <Select value={newStatus} onValueChange={(value) => setNewStatus(value as PanelStatus)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select new status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {getAvailableStatuses().map(status => (
+                              <SelectItem key={status} value={status}>
+                                <div className="flex items-center">
+                                  {getStatusIcon(status)}
+                                  <span className="ml-2">
+                                    {status.split('_').map(word => 
+                                      word.charAt(0).toUpperCase() + word.slice(1)
+                                    ).join(' ')}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="pt-2">
+                        <Button 
+                          className="w-full bg-construction-blue hover:bg-construction-blue-dark" 
+                          onClick={handleStatusUpdate}
+                          disabled={!newStatus}
+                        >
+                          Update Status
+                        </Button>
+                      </div>
+                      
+                      <div className="mt-2">
+                        <Button variant="outline" className="w-full" disabled>
+                          <Camera className="mr-2 h-4 w-4" /> Add Photo
+                        </Button>
+                        <p className="text-xs text-gray-500 mt-1 text-center">
+                          Photo upload coming soon in the mobile app
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
