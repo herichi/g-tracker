@@ -10,7 +10,6 @@ import {
   BarChart,
   Menu,
   LogOut,
-  Calendar,
   Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -46,11 +45,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       label: "Panels",
       icon: <Layers className="h-5 w-5" />,
       href: "/panels"
-    },
-    {
-      label: "Calendar",
-      icon: <Calendar className="h-5 w-5" />,
-      href: "/calendar"
     },
     {
       label: "Messages",
