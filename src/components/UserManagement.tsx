@@ -30,7 +30,8 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage
+  FormMessage,
+  FormDescription
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -770,9 +771,9 @@ export const UserManagement: React.FC = () => {
                       <FormLabel className="text-base">
                         Account Status
                       </FormLabel>
-                      <FormDescription>
+                      <div className="text-sm text-gray-500">
                         Set whether this account should be active upon creation
-                      </FormDescription>
+                      </div>
                     </div>
                     <FormControl>
                       <Switch
@@ -876,9 +877,9 @@ export const UserManagement: React.FC = () => {
                       <FormLabel className="text-base">
                         Account Status
                       </FormLabel>
-                      <FormDescription>
+                      <div className="text-sm text-gray-500">
                         User can access the system when active
-                      </FormDescription>
+                      </div>
                     </div>
                     <FormControl>
                       <Switch
