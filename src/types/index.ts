@@ -1,3 +1,4 @@
+
 export type ProjectStatus = 'active' | 'completed' | 'on-hold';
 
 export interface Project {
@@ -70,6 +71,7 @@ export interface Panel {
   projectId: string;
   buildingId?: string;
   serialNumber: string;
+  name: string;                    // Added name field
   type: string;
   status: PanelStatus;
   location?: string;
@@ -83,8 +85,21 @@ export interface Panel {
   deliveredDate?: string;
   installedDate?: string;
   inspectedDate?: string;
+  date?: string;                   // Added date field
+  issueTransmittalNo?: string;     // Added Issue/Transmittal No
+  dwgNo?: string;                  // Added Drawing Number
+  description?: string;
+  panelTag?: string;               // Added Panel Tag
+  unitQty?: number;                // Added Unit Qty (Sqm or LM)
+  unitQtyType?: 'sqm' | 'lm';      // Type of unit quantity
+  ifpQtyNos?: number;              // Added IFP QTY (Nos)
+  ifpQtyMeasurement?: number;      // Added IFP (m² LM)
+  draftman?: string;               // Added Draftman
+  checkedBy?: string;              // Added Checked by
   notes?: string;
+  statusUpdate?: string;           // Added Status update
   qrCode?: string;
+  qrCodeImage?: string;            // Added QR code image URL
   groupIds?: string[];
   statusHistory?: {
     status: PanelStatus;

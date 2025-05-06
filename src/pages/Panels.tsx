@@ -14,7 +14,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PanelStatus } from "@/types";
-import { FileX, Search, Plus, Edit, Filter, PanelLeft, Building } from "lucide-react";
+import { 
+  FileX, Search, Plus, Edit, Filter, 
+  PanelLeft, Building, Calendar, FileText,
+  QrCode
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -37,8 +41,13 @@ const Panels: React.FC = () => {
     // Apply search filter
     const matchesSearch = 
       panel.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (panel.name && panel.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       panel.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      panel.id.toLowerCase().includes(searchTerm.toLowerCase());
+      panel.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (panel.issueTransmittalNo && panel.issueTransmittalNo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (panel.dwgNo && panel.dwgNo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (panel.description && panel.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (panel.panelTag && panel.panelTag.toLowerCase().includes(searchTerm.toLowerCase()));
     
     // Apply status filter
     const matchesStatus = statusFilter === "all" || panel.status === statusFilter;
@@ -171,80 +180,94 @@ const Panels: React.FC = () => {
       <Card>
         <CardContent className="p-0">
           {filteredPanels.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Serial Number</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Project</TableHead>
-                  <TableHead>Building</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Dimensions</TableHead>
-                  <TableHead>Weight</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPanels.map((panel) => {
-                  const project = projects.find(p => p.id === panel.projectId);
-                  const building = panel.buildingId 
-                    ? buildings.find(b => b.id === panel.buildingId) 
-                    : null;
-                  
-                  return (
-                    <TableRow key={panel.id}>
-                      <TableCell className="font-medium">
-                        {panel.serialNumber}
-                      </TableCell>
-                      <TableCell>
-                        {panel.type}
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="link" 
-                          onClick={() => navigate(`/project/${panel.projectId}`)}
-                          className="p-0 h-auto text-construction-blue"
-                        >
-                          {project?.name || 'Unknown Project'}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        {building ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Project</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Issue/Transmittal</TableHead>
+                    <TableHead>Dwg No</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Panel Tag</TableHead>
+                    <TableHead>Unit Qty</TableHead>
+                    <TableHead>IFP QTY (Nos)</TableHead>
+                    <TableHead>IFP (m²/LM)</TableHead>
+                    <TableHead>Draftman</TableHead>
+                    <TableHead>Checked By</TableHead>
+                    <TableHead>Notes</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredPanels.map((panel) => {
+                    const project = projects.find(p => p.id === panel.projectId);
+                    const building = panel.buildingId 
+                      ? buildings.find(b => b.id === panel.buildingId) 
+                      : null;
+                    
+                    return (
+                      <TableRow key={panel.id}>
+                        <TableCell className="font-medium">
+                          {panel.serialNumber}
+                        </TableCell>
+                        <TableCell>
                           <Button 
                             variant="link" 
-                            onClick={() => navigate(`/building/${building.id}`)}
+                            onClick={() => navigate(`/project/${panel.projectId}`)}
                             className="p-0 h-auto text-construction-blue"
                           >
-                            {building.name}
+                            {project?.name || 'Unknown Project'}
                           </Button>
-                        ) : (
-                          <span className="text-gray-500">Not Assigned</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={panel.status} />
-                      </TableCell>
-                      <TableCell>
-                        {panel.dimensions.width} × {panel.dimensions.height} × {panel.dimensions.thickness} mm
-                      </TableCell>
-                      <TableCell>
-                        {panel.weight} kg
-                      </TableCell>
-                      <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0"
-                          onClick={() => navigate(`/panel/${panel.id}`)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                        </TableCell>
+                        <TableCell>{panel.name || '-'}</TableCell>
+                        <TableCell>{panel.type}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={panel.status} />
+                        </TableCell>
+                        <TableCell>{panel.date || '-'}</TableCell>
+                        <TableCell>{panel.issueTransmittalNo || '-'}</TableCell>
+                        <TableCell>{panel.dwgNo || '-'}</TableCell>
+                        <TableCell>{panel.description || '-'}</TableCell>
+                        <TableCell>{panel.panelTag || '-'}</TableCell>
+                        <TableCell>
+                          {panel.unitQty ? `${panel.unitQty} ${panel.unitQtyType || ''}` : '-'}
+                        </TableCell>
+                        <TableCell>{panel.ifpQtyNos || '-'}</TableCell>
+                        <TableCell>{panel.ifpQtyMeasurement || '-'}</TableCell>
+                        <TableCell>{panel.draftman || '-'}</TableCell>
+                        <TableCell>{panel.checkedBy || '-'}</TableCell>
+                        <TableCell>{panel.notes || '-'}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                              onClick={() => navigate(`/panel/${panel.id}`)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                              onClick={() => navigate(`/panel/${panel.id}`)}
+                            >
+                              <QrCode className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <div className="p-6 text-center">
               <div className="flex flex-col items-center justify-center py-12">

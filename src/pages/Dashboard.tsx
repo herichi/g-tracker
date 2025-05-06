@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAppContext } from "@/context/AppContext";
 import StatsCard from "@/components/StatsCard";
@@ -5,7 +6,19 @@ import StatusBadge from "@/components/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, PieChart, Building, Layers, CheckSquare, AlertTriangle } from "lucide-react";
 
-import { PieChart as RechartsPieChart, Pie, Cell, BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { 
+  PieChart as RechartsPieChart, 
+  Pie, 
+  Cell, 
+  BarChart as RechartsBarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  ResponsiveContainer, 
+  Tooltip, 
+  Legend 
+} from 'recharts';
 
 const Dashboard: React.FC = () => {
   const { projects, panels, projectSummary, panelSummary } = useAppContext();
