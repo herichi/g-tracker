@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Card, CardContent, CardHeader, CardTitle, 
@@ -16,7 +15,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -158,7 +156,7 @@ export const UserManagement: React.FC = () => {
       const combinedUsers = authUsers.users.map(authUser => {
         const profile = profiles?.find(p => p.id === authUser.id) || { 
           full_name: null, 
-          role: 'data_entry' 
+          role: 'data_entry' as UserRole
         };
 
         return {
