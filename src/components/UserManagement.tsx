@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Card, CardContent, CardHeader, CardTitle, 
@@ -33,7 +34,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { User, UserPlus, Edit, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { User, UserPlus, Edit, Trash2, ChevronDown, ChevronUp, Shield, ShieldCheck } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useForm } from "react-hook-form";
@@ -49,6 +50,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Switch } from "@/components/ui/switch";
 
 interface UserProfile {
   id: string;
@@ -57,6 +59,7 @@ interface UserProfile {
   role: string;
   created_at: string;
   last_sign_in_at: string | null;
+  active: boolean;
 }
 
 type UserRole = 
@@ -88,14 +91,17 @@ const addUserSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required" }),
   role: z.enum(['admin', 'project_manager', 'data_entry', 'production_engineer', 'qc_factory', 'store_site', 'qc_site', 'foreman_site', 'site_engineer'], { 
     message: "Role is required" 
-  })
+  }),
+  active: z.boolean().default(true)
 });
 
 const editUserSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required" }),
+  email: z.string().email({ message: "Please enter a valid email" }),
   role: z.enum(['admin', 'project_manager', 'data_entry', 'production_engineer', 'qc_factory', 'store_site', 'qc_site', 'foreman_site', 'site_engineer'], { 
     message: "Role is required" 
-  })
+  }),
+  active: z.boolean()
 });
 
 export const UserManagement: React.FC = () => {
@@ -119,7 +125,8 @@ export const UserManagement: React.FC = () => {
       email: "",
       password: "",
       fullName: "",
-      role: "data_entry" as UserRole
+      role: "data_entry" as UserRole,
+      active: true
     }
   });
 
@@ -127,7 +134,9 @@ export const UserManagement: React.FC = () => {
     resolver: zodResolver(editUserSchema),
     defaultValues: {
       fullName: "",
-      role: "data_entry" as UserRole
+      email: "",
+      role: "data_entry" as UserRole,
+      active: true
     }
   });
 
@@ -142,7 +151,9 @@ export const UserManagement: React.FC = () => {
   useEffect(() => {
     if (selectedUser && isEditDialogOpen) {
       editUserForm.setValue("fullName", selectedUser.full_name || "");
+      editUserForm.setValue("email", selectedUser.email || "");
       editUserForm.setValue("role", selectedUser.role as UserRole);
+      editUserForm.setValue("active", selectedUser.active);
     }
   }, [selectedUser, isEditDialogOpen, editUserForm]);
 
@@ -187,13 +198,17 @@ export const UserManagement: React.FC = () => {
 
       // Transform the profiles to our UserProfile interface
       const transformedUsers: UserProfile[] = allProfiles.map(profile => {
+        // Default to active if not specified in database
+        const isActive = profile.active !== undefined ? profile.active : true;
+        
         return {
           id: profile.id,
           email: profile.Email || 'No email',
           full_name: profile.full_name,
           role: profile.role || 'data_entry',
           created_at: profile.updated_at || new Date().toISOString(),
-          last_sign_in_at: profile.last_sign_in_at
+          last_sign_in_at: profile.last_sign_in_at,
+          active: isActive
         };
       });
 
@@ -225,13 +240,14 @@ export const UserManagement: React.FC = () => {
       }
 
       if (signUpData.user) {
-        // Update the profile with the role
+        // Update the profile with the role and active status
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ 
             full_name: data.fullName,
             role: data.role,
-            Email: data.email
+            Email: data.email,
+            active: data.active
           })
           .eq('id', signUpData.user.id);
 
@@ -259,7 +275,9 @@ export const UserManagement: React.FC = () => {
         .from('profiles')
         .update({ 
           full_name: data.fullName,
-          role: data.role 
+          role: data.role,
+          Email: data.email,
+          active: data.active
         })
         .eq('id', selectedUser.id);
 
@@ -275,6 +293,33 @@ export const UserManagement: React.FC = () => {
     } catch (error: any) {
       console.error("Error updating user:", error);
       toast.error(error.message || "Failed to update user");
+    }
+  };
+
+  const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      const newStatus = !currentStatus;
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ active: newStatus })
+        .eq('id', userId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success(`User ${newStatus ? 'activated' : 'deactivated'} successfully`);
+      
+      // Update the local state without refetching from the server
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId ? { ...user, active: newStatus } : user
+        )
+      );
+    } catch (error: any) {
+      console.error("Error toggling user status:", error);
+      toast.error(error.message || `Failed to ${currentStatus ? 'deactivate' : 'activate'} user`);
     }
   };
 
@@ -461,25 +506,30 @@ export const UserManagement: React.FC = () => {
                     className="cursor-pointer" 
                     onClick={() => handleSortChange('full_name')}
                   >
-                    User {sortBy === 'full_name' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                    User {getSortIndicator('full_name')}
                   </TableHead>
                   <TableHead 
                     className="cursor-pointer" 
                     onClick={() => handleSortChange('role')}
                   >
-                    Role {sortBy === 'role' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                    Role {getSortIndicator('role')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer"
+                  >
+                    Status
                   </TableHead>
                   <TableHead 
                     className="cursor-pointer" 
                     onClick={() => handleSortChange('updated_at')}
                   >
-                    Created {sortBy === 'updated_at' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                    Created {getSortIndicator('updated_at')}
                   </TableHead>
                   <TableHead 
                     className="cursor-pointer" 
                     onClick={() => handleSortChange('last_sign_in_at')}
                   >
-                    Last Login {sortBy === 'last_sign_in_at' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
+                    Last Login {getSortIndicator('last_sign_in_at')}
                   </TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -487,7 +537,7 @@ export const UserManagement: React.FC = () => {
               <TableBody>
                 {users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-6 text-gray-500">
+                    <TableCell colSpan={7} className="text-center py-6 text-gray-500">
                       No users found
                     </TableCell>
                   </TableRow>
@@ -519,8 +569,16 @@ export const UserManagement: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {getRoleNameForDisplay(user.role as any)}
+                          <div className="flex items-center gap-1.5">
+                            {user.role === 'admin' && <ShieldCheck size={14} className="text-amber-500" />}
+                            <Badge variant="outline" className="capitalize">
+                              {getRoleNameForDisplay(user.role as any)}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.active ? "success" : "destructive"} className="capitalize">
+                            {user.active ? 'Active' : 'Inactive'}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -544,6 +602,15 @@ export const UserManagement: React.FC = () => {
                               <Edit size={16} />
                             </Button>
                             <Button 
+                              variant={user.active ? "ghost" : "outline"} 
+                              size="sm"
+                              className={user.active ? "text-amber-500 hover:text-amber-700" : "text-green-500 hover:text-green-700"}
+                              onClick={() => handleToggleUserStatus(user.id, user.active)}
+                              title={user.active ? "Deactivate User" : "Activate User"}
+                            >
+                              {user.active ? "Deactivate" : "Activate"}
+                            </Button>
+                            <Button 
                               variant="ghost" 
                               size="sm"
                               className="text-red-500 hover:text-red-700"
@@ -561,7 +628,7 @@ export const UserManagement: React.FC = () => {
                       {expandedUsers[user.id] && (
                         <TableRow>
                           <TableCell className="p-0"></TableCell>
-                          <TableCell colSpan={5} className="p-4 bg-gray-50">
+                          <TableCell colSpan={6} className="p-4 bg-gray-50">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
                                 <h4 className="font-semibold mb-2">User Details</h4>
@@ -577,6 +644,10 @@ export const UserManagement: React.FC = () => {
                                   <div className="grid grid-cols-3 gap-1">
                                     <dt className="text-gray-500 text-sm">Role:</dt>
                                     <dd className="col-span-2 text-sm">{getRoleNameForDisplay(user.role as any)}</dd>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-1">
+                                    <dt className="text-gray-500 text-sm">Status:</dt>
+                                    <dd className="col-span-2 text-sm">{user.active ? 'Active' : 'Inactive'}</dd>
                                   </div>
                                 </dl>
                               </div>
@@ -690,6 +761,28 @@ export const UserManagement: React.FC = () => {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={addUserForm.control}
+                name="active"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Account Status
+                      </FormLabel>
+                      <FormDescription>
+                        Set whether this account should be active upon creation
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
               <DialogFooter>
                 <Button 
                   type="button" 
@@ -700,7 +793,7 @@ export const UserManagement: React.FC = () => {
                 </Button>
                 <Button 
                   type="submit" 
-                  className="volta-bg hover:volta-bg-dark"
+                  className="bg-construction-blue hover:bg-construction-blue-dark"
                 >
                   Add User
                 </Button>
@@ -736,6 +829,19 @@ export const UserManagement: React.FC = () => {
               />
               <FormField
                 control={editUserForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="user@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editUserForm.control}
                 name="role"
                 render={({ field }) => (
                   <FormItem>
@@ -761,6 +867,28 @@ export const UserManagement: React.FC = () => {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={editUserForm.control}
+                name="active"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">
+                        Account Status
+                      </FormLabel>
+                      <FormDescription>
+                        User can access the system when active
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
               <DialogFooter>
                 <Button 
                   type="button" 
@@ -771,7 +899,7 @@ export const UserManagement: React.FC = () => {
                 </Button>
                 <Button 
                   type="submit" 
-                  className="volta-bg hover:volta-bg-dark"
+                  className="bg-construction-blue hover:bg-construction-blue-dark"
                 >
                   Save Changes
                 </Button>
