@@ -38,12 +38,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (event === 'SIGNED_IN') {
           toast.success('Signed in successfully');
+          
+          // Update last_sign_in_at in profiles table
+          if (session?.user) {
+            try {
+              const { error } = await supabase
+                .from('profiles')
+                .update({ last_sign_in_at: new Date().toISOString() })
+                .eq('id', session.user.id);
+                
+              if (error) {
+                console.error("Error updating last sign in time:", error);
+              }
+            } catch (error) {
+              console.error("Error in updating last sign in:", error);
+            }
+          }
+          
           fetchUserRole(session?.user?.id);
         }
         if (event === 'SIGNED_OUT') {
