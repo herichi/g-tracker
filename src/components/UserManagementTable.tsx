@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
@@ -98,6 +99,7 @@ const UserManagementTable = ({ filterRole, filterInactive = false }: UserManagem
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      // Modified query to get ALL users from the profiles table
       let query = supabase
         .from('profiles')
         .select('*');
