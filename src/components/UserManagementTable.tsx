@@ -4,14 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-import { User } from "@/types/user";
+import { User, UserRole } from "@/types/user";
 import UserList from "@/components/user-management/UserList";
 import EditUserDialog, { EditUserFormData } from "@/components/user-management/EditUserDialog";
 import AddUserDialog, { AddUserFormData } from "@/components/user-management/AddUserDialog";
 import DeleteUserDialog from "@/components/user-management/DeleteUserDialog";
 
 interface UserManagementTableProps {
-  filterRole: string | null;
+  filterRole: UserRole | null;
   filterInactive?: boolean;
 }
 
@@ -78,7 +78,7 @@ const UserManagementTable = ({ filterRole, filterInactive = false }: UserManagem
         .from('profiles')
         .update({
           full_name: formData.full_name,
-          role: formData.role,
+          role: formData.role as UserRole,
           active: formData.active,
           Email: formData.email,
           updated_at: new Date().toISOString(),
@@ -115,7 +115,7 @@ const UserManagementTable = ({ filterRole, filterInactive = false }: UserManagem
         const { error: profileError } = await supabase
           .from('profiles')
           .update({
-            role: formData.role,
+            role: formData.role as UserRole,
             active: formData.active,
             full_name: formData.full_name,
             Email: formData.email,
