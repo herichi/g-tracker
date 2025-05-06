@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Panel, PanelStatus, Project, Building } from "@/types";
@@ -141,7 +142,16 @@ const PanelForm: React.FC<PanelFormProps> = ({
   const filteredBuildings = buildings.filter((b) => b.projectId === projectId);
 
   const handleSubmit = (data: z.infer<typeof panelSchema>) => {
-    onSubmit(data);
+    // Ensure dimensions are always fully defined before submitting
+    const submissionData: Partial<Panel> = {
+      ...data,
+      dimensions: {
+        width: data.dimensions.width,
+        height: data.dimensions.height,
+        thickness: data.dimensions.thickness
+      }
+    };
+    onSubmit(submissionData);
   };
 
   return (
@@ -693,3 +703,4 @@ const PanelForm: React.FC<PanelFormProps> = ({
 };
 
 export default PanelForm;
+
