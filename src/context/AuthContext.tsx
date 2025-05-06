@@ -39,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -51,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setTimeout(async () => {
               try {
                 const currentTime = new Date().toISOString();
+                console.log(`Updating last_sign_in_at for user ${session.user.id} to ${currentTime}`);
                 
                 // Use the typed definition to ensure we're only passing valid fields
                 const updateData = {
@@ -65,6 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   
                 if (error) {
                   console.error("Error updating last sign in time:", error);
+                } else {
+                  console.log("Successfully updated last_sign_in_at");
                 }
               } catch (error) {
                 console.error("Error in updating last sign in:", error);
@@ -83,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Existing session check:", session?.user?.id);
       setSession(session);
       setUser(session?.user ?? null);
       fetchUserRole(session?.user?.id);
@@ -98,6 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!userId) return;
     
     try {
+      console.log(`Fetching role for user ${userId}`);
       const { data, error } = await supabase
         .from('profiles')
         .select('role')
@@ -107,6 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error("Error fetching user role:", error);
       } else if (data) {
+        console.log(`Role for user ${userId}:`, data.role);
         setUserRole(data.role as UserRole);
       }
     } catch (error) {
@@ -116,15 +123,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log(`Attempting to sign in user: ${email}`);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        console.error("Sign in error:", error);
+      } else {
+        console.log("Sign in successful");
+      }
+      
       return { error };
     } catch (error) {
+      console.error("Exception during sign in:", error);
       return { error };
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
+      console.log(`Attempting to sign up user: ${email}, ${fullName}`);
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -134,34 +151,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           },
         },
       });
+      
+      if (error) {
+        console.error("Sign up error:", error);
+      } else {
+        console.log("Sign up successful");
+      }
+      
       return { error };
     } catch (error) {
+      console.error("Exception during sign up:", error);
       return { error };
     }
   };
 
   const signOut = async () => {
+    console.log("Signing out user");
     await supabase.auth.signOut();
   };
 
   const resetPassword = async (email: string) => {
     try {
+      console.log(`Attempting to reset password for: ${email}`);
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
+      
+      if (error) {
+        console.error("Password reset error:", error);
+      } else {
+        console.log("Password reset email sent");
+      }
+      
       return { error };
     } catch (error) {
+      console.error("Exception during password reset:", error);
       return { error };
     }
   };
 
   const updatePassword = async (newPassword: string) => {
     try {
+      console.log("Updating user password");
       const { error } = await supabase.auth.updateUser({
         password: newPassword,
       });
+      
+      if (error) {
+        console.error("Password update error:", error);
+      } else {
+        console.log("Password updated successfully");
+      }
+      
       return { error };
     } catch (error) {
+      console.error("Exception during password update:", error);
       return { error };
     }
   };

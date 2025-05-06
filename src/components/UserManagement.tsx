@@ -42,6 +42,14 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/context/AuthContext";
 import { getRoleNameForDisplay } from "@/types";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface UserProfile {
   id: string;
@@ -99,6 +107,11 @@ export const UserManagement: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const { user: currentUser } = useAuth();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [sortBy, setSortBy] = useState<string>('full_name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const usersPerPage = 10;
 
   const addUserForm = useForm({
     resolver: zodResolver(addUserSchema),
@@ -120,7 +133,7 @@ export const UserManagement: React.FC = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentPage, sortBy, sortOrder]);
 
   useEffect(() => {
     if (selectedUser && isEditDialogOpen) {
@@ -131,33 +144,51 @@ export const UserManagement: React.FC = () => {
 
   const fetchUsers = async () => {
     setIsLoading(true);
+    console.log("Fetching users with params:", { page: currentPage, sortBy, sortOrder });
+    
     try {
-      // Use pagination and optimize the query for better performance
-      const { data: profiles, error } = await supabase
+      // Calculate pagination parameters
+      const from = (currentPage - 1) * usersPerPage;
+      const to = from + usersPerPage - 1;
+      
+      // Query with pagination and sorting
+      let query = supabase
         .from('profiles')
-        .select('*')
-        .order('full_name', { ascending: true });
+        .select('*', { count: 'exact' })
+        .order(sortBy, { ascending: sortOrder === 'asc' })
+        .range(from, to);
+      
+      // Fetch data
+      const { data: profiles, error, count } = await query;
 
       if (error) {
+        console.error("Supabase query error:", error);
         throw error;
       }
 
-      // Add debug logging to see what's coming back
-      console.log('Profiles fetched:', profiles);
+      // Calculate total pages if count is available
+      if (count !== null) {
+        setTotalPages(Math.max(1, Math.ceil(count / usersPerPage)));
+        console.log(`Total records: ${count}, Total pages: ${Math.ceil(count / usersPerPage)}`);
+      }
+
+      console.log('Raw profiles data:', profiles);
 
       if (!profiles || profiles.length === 0) {
         console.warn("No profiles found in the database");
         setUsers([]);
+        setIsLoading(false);
         return;
       }
 
       // Transform the data to match our UserProfile interface
       const transformedUsers: UserProfile[] = profiles.map(profile => {
+        console.log("Processing profile:", profile);
         return {
           id: profile.id,
           email: profile.Email || 'No email',
           full_name: profile.full_name,
-          role: profile.role,
+          role: profile.role || 'data_entry',
           created_at: profile.updated_at || new Date().toISOString(),
           last_sign_in_at: profile.last_sign_in_at
         };
@@ -275,6 +306,101 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handleSortChange = (column: string) => {
+    if (sortBy === column) {
+      // If clicking the same column, toggle sort order
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // If clicking a new column, set it as sort column with ascending order
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+    
+    const pages = [];
+    const maxPagesToShow = 5;
+    
+    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+    
+    if (endPage - startPage + 1 < maxPagesToShow) {
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <PaginationItem key={i}>
+          <PaginationLink 
+            isActive={currentPage === i} 
+            onClick={() => handlePageChange(i)}
+          >
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+    
+    return (
+      <Pagination className="mt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious 
+              onClick={() => handlePageChange(currentPage - 1)}
+              className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+            />
+          </PaginationItem>
+          {startPage > 1 && (
+            <>
+              <PaginationItem>
+                <PaginationLink onClick={() => handlePageChange(1)}>1</PaginationLink>
+              </PaginationItem>
+              {startPage > 2 && (
+                <PaginationItem>
+                  <span className="px-2">...</span>
+                </PaginationItem>
+              )}
+            </>
+          )}
+          {pages}
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && (
+                <PaginationItem>
+                  <span className="px-2">...</span>
+                </PaginationItem>
+              )}
+              <PaginationItem>
+                <PaginationLink onClick={() => handlePageChange(totalPages)}>
+                  {totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            </>
+          )}
+          <PaginationItem>
+            <PaginationNext 
+              onClick={() => handlePageChange(currentPage + 1)}
+              className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    );
+  };
+
+  const getSortIndicator = (column: string) => {
+    if (sortBy !== column) return null;
+    return sortOrder === 'asc' ? ' ↑' : ' ↓';
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -301,10 +427,30 @@ export const UserManagement: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Last Login</TableHead>
+                  <TableHead 
+                    className="cursor-pointer" 
+                    onClick={() => handleSortChange('full_name')}
+                  >
+                    User {getSortIndicator('full_name')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer" 
+                    onClick={() => handleSortChange('role')}
+                  >
+                    Role {getSortIndicator('role')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer" 
+                    onClick={() => handleSortChange('updated_at')}
+                  >
+                    Created {getSortIndicator('updated_at')}
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer" 
+                    onClick={() => handleSortChange('last_sign_in_at')}
+                  >
+                    Last Login {getSortIndicator('last_sign_in_at')}
+                  </TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -373,6 +519,7 @@ export const UserManagement: React.FC = () => {
                 )}
               </TableBody>
             </Table>
+            {renderPagination()}
           </div>
         )}
       </CardContent>
