@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Card, CardContent, CardHeader, CardTitle, 
@@ -158,7 +157,7 @@ export const UserManagement: React.FC = () => {
       // Query with pagination and sorting
       console.log("Querying profiles table with range:", from, to);
       
-      // Get all users without filtering by the current user
+      // IMPORTANT: Fetch ALL profiles without filtering by current user
       const { data: profiles, error, count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' })
@@ -185,7 +184,7 @@ export const UserManagement: React.FC = () => {
         return;
       }
 
-      // For each profile, get the email from auth.users
+      // Transform the profiles to our UserProfile interface
       const transformedUsers: UserProfile[] = profiles.map(profile => {
         return {
           id: profile.id,
@@ -317,14 +316,8 @@ export const UserManagement: React.FC = () => {
   };
 
   const handleSortChange = (column: string) => {
-    if (sortBy === column) {
-      // If clicking the same column, toggle sort order
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      // If clicking a new column, set it as sort column with ascending order
-      setSortBy(column);
-      setSortOrder('asc');
-    }
+    if (sortBy !== column) return null;
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
   };
 
   const renderPagination = () => {
