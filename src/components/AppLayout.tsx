@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -9,10 +9,12 @@ import {
   ChevronLeft,
   ChevronRight,
   BarChart,
-  Menu
+  Menu,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/context/AuthContext";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -20,9 +22,11 @@ interface AppLayoutProps {
 
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { signOut } = useAuth();
 
   const navItems = [
     {
@@ -53,6 +57,11 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
   };
 
   return (
@@ -109,6 +118,21 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             ))}
           </ul>
         </nav>
+
+        {/* Logout button */}
+        <div className="p-2 border-t border-white/10">
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "w-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10",
+              collapsed ? "px-2" : "px-3"
+            )}
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-5 w-5" />
+            {!collapsed && <span className="ml-3">Sign Out</span>}
+          </Button>
+        </div>
 
         {/* Collapse button - Hidden on mobile */}
         {!isMobile && (
