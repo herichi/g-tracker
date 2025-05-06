@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   Card, CardContent, CardHeader, CardTitle, 
@@ -159,7 +158,8 @@ export const UserManagement: React.FC = () => {
       
       console.log("Querying profiles table with range:", from, to);
       
-      // Use direct fetch from profiles table without any user filtering
+      // Use direct fetch from profiles table without any filtering
+      // This should return ALL users in the profiles table
       const { data: allProfiles, error, count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' })
@@ -319,13 +319,13 @@ export const UserManagement: React.FC = () => {
   };
 
   const handleSortChange = (column: string) => {
-    if (sortBy === column) {
-      // If clicking the same column, toggle sort order
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
+    if (sortBy !== column) {
       // If clicking a new column, set it as sort column with ascending order
       setSortBy(column);
       setSortOrder('asc');
+    } else {
+      // If clicking the same column, toggle sort order
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     }
   };
 
