@@ -158,6 +158,11 @@ export const getRoleNameForDisplay = (role: UserRole): string => {
     case 'foreman_site': return 'Foreman Site';
     case 'site_engineer': return 'Site Engineer';
     case 'admin': return 'Administrator';
-    default: return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    default: 
+      // Make sure we handle the case properly by checking if role is a string
+      if (typeof role === 'string') {
+        return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      }
+      return String(role);
   }
 };

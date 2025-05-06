@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Project, Panel, ProjectSummary, PanelSummary, PanelStatusCount, Building, PanelGroup } from "@/types";
+import { Project, Panel, ProjectSummary, PanelSummary, PanelStatusCount, Building, PanelGroup, PanelStatus } from "@/types";
 import { mockProjects, mockPanels } from "@/lib/mockData";
 import { toast } from "@/components/ui/use-toast";
 
