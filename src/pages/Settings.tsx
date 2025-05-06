@@ -8,12 +8,14 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { UserManagement } from "@/components/UserManagement";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
 const Settings: React.FC = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [lastLogin, setLastLogin] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -108,7 +110,11 @@ const Settings: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="dark-mode">Dark Mode</Label>
-                  <Switch id="dark-mode" />
+                  <Switch 
+                    id="dark-mode" 
+                    checked={theme === 'dark'}
+                    onCheckedChange={toggleTheme}
+                  />
                 </div>
                 <p className="text-sm text-gray-500">
                   Enable dark mode for a better experience in low-light environments.

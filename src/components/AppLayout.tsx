@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -29,6 +29,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { signOut, user } = useAuth();
+  const { theme } = useTheme();
 
   const navItems = [
     {
@@ -77,7 +78,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-volta-background">
+    <div className={`flex h-screen overflow-hidden bg-volta-background ${theme}`}>
       {/* Mobile Menu Button - Only visible on mobile */}
       {isMobile && (
         <Button

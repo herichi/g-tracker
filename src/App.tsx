@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/context/AppContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import AppLayout from "@/components/AppLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -28,85 +28,87 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <AppProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route 
-                path="/" 
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Dashboard />
-                    </AppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/projects" 
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Projects />
-                    </AppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/project/:projectId" 
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <ProjectDetail />
-                    </AppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/building/:buildingId" 
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <BuildingDetail />
-                    </AppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/panels" 
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Panels />
-                    </AppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/panel/:panelId" 
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <PanelDetail />
-                    </AppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/settings" 
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Settings />
-                    </AppLayout>
-                  </ProtectedRoute>
-                } 
-              />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <ThemeProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route 
+                  path="/" 
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <Dashboard />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/projects" 
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <Projects />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/project/:projectId" 
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <ProjectDetail />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/building/:buildingId" 
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <BuildingDetail />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/panels" 
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <Panels />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/panel/:panelId" 
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <PanelDetail />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/settings" 
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <Settings />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </ThemeProvider>
         </AppProvider>
       </AuthProvider>
     </TooltipProvider>
