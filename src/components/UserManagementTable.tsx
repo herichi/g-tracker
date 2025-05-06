@@ -26,26 +26,32 @@ const UserManagementTable = ({ filterRole, filterInactive = false }: UserManagem
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // Modified query to get ALL users from the profiles table
-      let query = supabase
+      console.log("Fetching all users from profiles table");
+      
+      // First get all users without any filters
+      let { data: allUsers, error } = await supabase
         .from('profiles')
         .select('*');
       
-      if (filterRole) {
-        query = query.eq('role', filterRole);
-      }
-
-      if (filterInactive) {
-        query = query.eq('active', false);
-      } else if (filterInactive === false) {
-        query = query.eq('active', true);
-      }
-
-      const { data, error } = await query;
-      
       if (error) throw error;
       
-      setUsers(data as User[]);
+      console.log(`Retrieved ${allUsers?.length || 0} total users from database`);
+      
+      // Then apply filters in memory if needed
+      let filteredUsers = allUsers || [];
+      
+      if (filterRole) {
+        console.log(`Filtering by role: ${filterRole}`);
+        filteredUsers = filteredUsers.filter(user => user.role === filterRole);
+      }
+
+      if (filterInactive !== undefined) {
+        console.log(`Filtering by active status: ${!filterInactive}`);
+        filteredUsers = filteredUsers.filter(user => user.active === !filterInactive);
+      }
+      
+      console.log(`After filtering: ${filteredUsers.length} users match criteria`);
+      setUsers(filteredUsers as User[]);
     } catch (error: any) {
       toast.error(`Error fetching users: ${error.message}`);
       console.error("Error fetching users:", error);
