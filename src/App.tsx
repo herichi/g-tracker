@@ -18,6 +18,7 @@ import Panels from "./pages/Panels";
 import PanelDetail from "./pages/PanelDetail";
 import BuildingDetail from "./pages/BuildingDetail";
 import Settings from "./pages/Settings";
+import Users from "./pages/Users";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -92,6 +93,16 @@ const App = () => (
                     <ProtectedRoute>
                       <AppLayout>
                         <PanelDetail />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/users" 
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <Users />
                       </AppLayout>
                     </ProtectedRoute>
                   } 

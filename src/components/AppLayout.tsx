@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
   Menu,
   LogOut,
   Mail,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -27,7 +29,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
-  const { signOut, user } = useAuth();
+  const { signOut, user, userRole } = useAuth();
   const { theme } = useTheme();
 
   const navItems = [
@@ -51,6 +53,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       icon: <Mail className="h-5 w-5" />,
       href: "/messages"
     },
+    // Add Users section (only visible to admins)
+    ...(userRole === "admin" ? [
+      {
+        label: "Users",
+        icon: <Users className="h-5 w-5" />,
+        href: "/users"
+      }
+    ] : []),
     {
       label: "Settings",
       icon: <Settings className="h-5 w-5" />,
