@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,7 +62,25 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Construction theme colors
+				// New theme colors based on the provided image
+				volta: {
+					primary: '#8F2D3B',      // Main burgundy color
+					secondary: '#A73741',    // Lighter burgundy
+					dark: '#79242F',         // Darker burgundy
+					accent: '#C94E64',       // Highlight color
+					background: '#9A2C3D',   // Background burgundy
+					card: '#8F2D3B',         // Card background
+					text: '#FFFFFF',         // White text
+					muted: '#D17A8A',        // Muted text
+					border: '#7A2836',       // Border color
+					chart: {
+						blue: '#4B8BDF',     // Blue line in charts
+						orange: '#FF9F5A',   // Orange line in charts
+						red: '#F5515F',      // Red line in charts
+						green: '#4BD763',    // Green line in charts
+					}
+				},
+				// Keep original construction theme colors
 				construction: {
 					blue: {
 						light: '#1976D2',

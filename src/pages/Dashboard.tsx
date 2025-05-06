@@ -4,7 +4,7 @@ import { useAppContext } from "@/context/AppContext";
 import StatsCard from "@/components/StatsCard";
 import StatusBadge from "@/components/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, PieChart, Building, Layers, CheckSquare, AlertTriangle } from "lucide-react";
+import { Building, Layers, CheckSquare, AlertTriangle, RefreshCw } from "lucide-react";
 
 import { 
   PieChart as RechartsPieChart, 
@@ -17,7 +17,9 @@ import {
   CartesianGrid, 
   ResponsiveContainer, 
   Tooltip, 
-  Legend 
+  Legend,
+  LineChart,
+  Line
 } from 'recharts';
 
 const Dashboard: React.FC = () => {
@@ -29,13 +31,13 @@ const Dashboard: React.FC = () => {
     value: item.count
   }));
 
-  // Colors for pie chart
+  // Colors for pie chart - updated for Volta theme
   const COLORS = [
-    '#2196F3', // manufactured - blue
-    '#FF9800', // delivered - orange
-    '#FFC107', // installed - yellow
-    '#4CAF50', // inspected - green
-    '#F44336'  // rejected - red
+    '#4B8BDF', // manufactured - blue
+    '#FF9F5A', // delivered - orange
+    '#FFD166', // installed - yellow
+    '#4BD763', // inspected - green
+    '#F5515F'  // rejected - red
   ];
 
   // Prepare data for bar chart
@@ -47,8 +49,14 @@ const Dashboard: React.FC = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <div className="text-sm text-gray-500">Last updated: {new Date().toLocaleString()}</div>
+        <div>
+          <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <p className="text-white/70 text-sm">Panel tracking and project overview</p>
+        </div>
+        <div className="flex items-center gap-2 text-white/70 text-sm">
+          <RefreshCw className="h-4 w-4" />
+          <span>Last updated: {new Date().toLocaleString()}</span>
+        </div>
       </div>
 
       {/* Stats cards */}
@@ -58,35 +66,42 @@ const Dashboard: React.FC = () => {
           value={projectSummary.totalProjects} 
           icon={<Building className="h-4 w-4" />}
           description="All projects in the system"
+          className="bg-volta-card border-volta-border text-white"
         />
         <StatsCard 
           title="Active Projects" 
           value={projectSummary.activeProjects}
           icon={<Building className="h-4 w-4" />}
           description="Currently ongoing projects"
+          trend={{ value: 12, positive: true }}
+          className="bg-volta-card border-volta-border text-white"
         />
         <StatsCard 
           title="Total Panels" 
           value={panelSummary.totalPanels}
           icon={<Layers className="h-4 w-4" />}
           description="All panels across projects"
+          trend={{ value: 8, positive: true }}
+          className="bg-volta-card border-volta-border text-white"
         />
         <StatsCard 
           title="Installed Panels" 
           value={panelSummary.statusCounts.find(s => s.status === 'installed')?.count || 0}
           icon={<CheckSquare className="h-4 w-4" />}
           description="Panels successfully installed"
+          trend={{ value: 5, positive: true }}
+          className="bg-volta-card border-volta-border text-white"
         />
       </div>
 
       {/* Charts section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Pie chart for panel statuses */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Panel Status Distribution</CardTitle>
+        <Card className="bg-volta-card border-volta-border text-white">
+          <CardHeader className="border-b border-volta-border pb-3">
+            <CardTitle className="text-lg text-white">Panel Status Distribution</CardTitle>
           </CardHeader>
-          <CardContent className="h-80">
+          <CardContent className="h-80 pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsPieChart>
                 <Pie
@@ -103,7 +118,7 @@ const Dashboard: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip contentStyle={{ backgroundColor: '#8F2D3B', borderColor: '#7A2836', color: 'white' }} />
                 <Legend />
               </RechartsPieChart>
             </ResponsiveContainer>
@@ -111,11 +126,11 @@ const Dashboard: React.FC = () => {
         </Card>
 
         {/* Bar chart for projects */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Panels by Project</CardTitle>
+        <Card className="bg-volta-card border-volta-border text-white">
+          <CardHeader className="border-b border-volta-border pb-3">
+            <CardTitle className="text-lg text-white">Panels by Project</CardTitle>
           </CardHeader>
-          <CardContent className="h-80">
+          <CardContent className="h-80 pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <RechartsBarChart
                 data={barChartData}
@@ -126,18 +141,18 @@ const Dashboard: React.FC = () => {
                   bottom: 60,
                 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#7A2836" />
                 <XAxis 
                   dataKey="name" 
                   angle={-45} 
                   textAnchor="end"
                   height={60}
-                  tick={{fontSize: 12}}
+                  tick={{fontSize: 12, fill: 'white'}}
                 />
-                <YAxis />
-                <Tooltip />
+                <YAxis tick={{ fill: 'white' }} />
+                <Tooltip contentStyle={{ backgroundColor: '#8F2D3B', borderColor: '#7A2836', color: 'white' }} />
                 <Legend />
-                <Bar dataKey="panels" name="Panel Count" fill="#1976D2" />
+                <Bar dataKey="panels" name="Panel Count" fill="#4B8BDF" />
               </RechartsBarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -145,28 +160,28 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Recent projects */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-lg">Recent Projects</CardTitle>
+      <Card className="mb-6 bg-volta-card border-volta-border text-white">
+        <CardHeader className="border-b border-volta-border pb-3">
+          <CardTitle className="text-lg text-white">Recent Projects</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Panels</th>
+              <thead>
+                <tr className="border-b border-volta-border">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Project</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Location</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Client</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Panels</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-volta-border">
                 {projects.slice(0, 5).map((project) => (
-                  <tr key={project.id} className="hover:bg-gray-50">
+                  <tr key={project.id} className="hover:bg-volta-secondary/20">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">{project.name}</div>
-                      <div className="text-gray-500 text-xs">{project.id}</div>
+                      <div className="font-medium text-white">{project.name}</div>
+                      <div className="text-white/60 text-xs">{project.id}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">{project.location}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{project.clientName}</td>
@@ -185,35 +200,35 @@ const Dashboard: React.FC = () => {
       </Card>
 
       {/* Panels requiring attention */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center">
-            <AlertTriangle className="h-4 w-4 mr-2 text-construction-status-error" />
+      <Card className="bg-volta-card border-volta-border text-white">
+        <CardHeader className="border-b border-volta-border pb-3">
+          <CardTitle className="text-lg flex items-center text-white">
+            <AlertTriangle className="h-4 w-4 mr-2 text-volta-chart-red" />
             Panels Requiring Attention
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial No.</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Update</th>
+              <thead>
+                <tr className="border-b border-volta-border">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Serial No.</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Project</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">Last Update</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-volta-border">
                 {panels
                   .filter(panel => panel.status === 'rejected')
                   .slice(0, 5)
                   .map((panel) => {
                     const project = projects.find(p => p.id === panel.projectId);
                     return (
-                      <tr key={panel.id} className="hover:bg-gray-50">
+                      <tr key={panel.id} className="hover:bg-volta-secondary/20">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-medium text-gray-900">{panel.serialNumber}</div>
+                          <div className="font-medium text-white">{panel.serialNumber}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">{panel.type}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -222,7 +237,7 @@ const Dashboard: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <StatusBadge status={panel.status} pulse={true} />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-white/80">
                           {panel.inspectedDate || panel.installedDate || panel.deliveredDate || panel.manufacturedDate}
                         </td>
                       </tr>

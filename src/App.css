@@ -1,7 +1,7 @@
+
 #root {
-  max-width: 1280px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
@@ -12,10 +12,10 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em #8F2D3Baa);
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em #8F2D3Baa);
 }
 
 @keyframes logo-spin {
@@ -39,4 +39,48 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Volta theme specific styles */
+.volta-bg {
+  background-color: #8F2D3B;
+  color: #ffffff;
+}
+
+.volta-bg-dark {
+  background-color: #79242F;
+  color: #ffffff;
+}
+
+.volta-text {
+  color: #ffffff;
+}
+
+.volta-text-muted {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.volta-border {
+  border-color: #7A2836;
+}
+
+.volta-highlight {
+  color: #C94E64;
+}
+
+/* Chart colors */
+.volta-chart-blue {
+  color: #4B8BDF;
+}
+
+.volta-chart-orange {
+  color: #FF9F5A;
+}
+
+.volta-chart-red {
+  color: #F5515F;
+}
+
+.volta-chart-green {
+  color: #4BD763;
 }
