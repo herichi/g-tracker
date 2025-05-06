@@ -93,6 +93,7 @@ const generatePanel = (projectId: string, index: number): Panel => {
     id: `${serialNumber}`,
     projectId,
     serialNumber,
+    name: `Panel ${serialNumber}`, // Added name field as required by the Panel type
     type: panelType,
     status,
     location: status === 'manufactured' ? 'Factory' : 'Site',

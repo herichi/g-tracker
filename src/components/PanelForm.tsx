@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Panel, PanelStatus, Project, Building } from "@/types";
@@ -33,6 +32,7 @@ interface PanelFormProps {
   isSubmitting?: boolean;
 }
 
+// Define status as a literal union type to match PanelStatus
 const panelSchema = z.object({
   serialNumber: z.string().min(1, "Serial number is required"),
   name: z.string().optional(),
@@ -45,7 +45,25 @@ const panelSchema = z.object({
     height: z.coerce.number().min(0, "Height must be 0 or greater"),
     thickness: z.coerce.number().min(0, "Thickness must be 0 or greater"),
   }),
-  status: z.string().min(1, "Status is required"),
+  status: z.enum([
+    "manufactured", 
+    "delivered", 
+    "installed", 
+    "inspected", 
+    "rejected", 
+    "issued", 
+    "held", 
+    "produced", 
+    "prepared", 
+    "returned",
+    "rejected_material",
+    "approved_material",
+    "checked",
+    "approved_final",
+    "cancelled",
+    "proceed_delivery",
+    "broken_site"
+  ] as const), // Using const to enforce literal types
   date: z.string().optional(),
   issueTransmittalNo: z.string().optional(),
   dwgNo: z.string().optional(),
@@ -108,7 +126,7 @@ const PanelForm: React.FC<PanelFormProps> = ({
             height: 0,
             thickness: 0,
           },
-          status: "manufactured",
+          status: "manufactured" as PanelStatus, // Type assertion to ensure it's PanelStatus
           date: "",
           issueTransmittalNo: "",
           dwgNo: "",
@@ -648,10 +666,10 @@ const PanelForm: React.FC<PanelFormProps> = ({
                 )}
               />
 
-              {field.value && (
+              {form.watch("qrCodeImage") && (
                 <div className="border rounded p-4 flex justify-center">
                   <img 
-                    src={field.value} 
+                    src={form.watch("qrCodeImage")} 
                     alt="QR Code Preview"
                     className="max-h-32 object-contain" 
                   />
