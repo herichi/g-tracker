@@ -106,7 +106,7 @@ export const UserManagement: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, userRole } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [sortBy, setSortBy] = useState<string>('full_name');
@@ -132,8 +132,12 @@ export const UserManagement: React.FC = () => {
   });
 
   useEffect(() => {
-    fetchUsers();
-  }, [currentPage, sortBy, sortOrder]);
+    if (userRole === 'admin') {
+      fetchUsers();
+    } else {
+      setIsLoading(false);
+    }
+  }, [currentPage, sortBy, sortOrder, userRole]);
 
   useEffect(() => {
     if (selectedUser && isEditDialogOpen) {
@@ -144,7 +148,7 @@ export const UserManagement: React.FC = () => {
 
   const fetchUsers = async () => {
     setIsLoading(true);
-    console.log("Fetching users with params:", { page: currentPage, sortBy, sortOrder });
+    console.log("Admin user is fetching all users with params:", { page: currentPage, sortBy, sortOrder });
     
     try {
       // Calculate pagination parameters
@@ -152,14 +156,14 @@ export const UserManagement: React.FC = () => {
       const to = from + usersPerPage - 1;
       
       // Query with pagination and sorting
-      let query = supabase
+      console.log("Querying profiles table with range:", from, to);
+      
+      // Get all users without filtering by the current user
+      const { data: profiles, error, count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' })
         .order(sortBy, { ascending: sortOrder === 'asc' })
         .range(from, to);
-      
-      // Fetch data
-      const { data: profiles, error, count } = await query;
 
       if (error) {
         console.error("Supabase query error:", error);
@@ -181,11 +185,11 @@ export const UserManagement: React.FC = () => {
         return;
       }
 
-      // Transform the data to match our UserProfile interface
+      // For each profile, get the email from auth.users
       const transformedUsers: UserProfile[] = profiles.map(profile => {
-        console.log("Processing profile:", profile);
         return {
           id: profile.id,
+          // Use Email field if available, or show 'No email' if not
           email: profile.Email || 'No email',
           full_name: profile.full_name,
           role: profile.role || 'data_entry',
@@ -400,6 +404,25 @@ export const UserManagement: React.FC = () => {
     if (sortBy !== column) return null;
     return sortOrder === 'asc' ? ' ↑' : ' ↓';
   };
+
+  // If user is not admin, show a permission message
+  if (userRole !== 'admin') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>User Management</CardTitle>
+          <CardDescription>
+            You need administrator permissions to access this section
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="p-4 text-center text-gray-500">
+            Only administrators can view and manage users.
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
