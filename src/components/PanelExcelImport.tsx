@@ -239,7 +239,8 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
     fileInput.type = 'file';
     fileInput.accept = '.xlsx,.xls,.csv';
     fileInput.onchange = (e) => {
-      const event = e as React.ChangeEvent<HTMLInputElement>;
+      // Properly type the event by first casting to unknown then to the specific type
+      const event = e as unknown as React.ChangeEvent<HTMLInputElement>;
       handleFileUpload(event);
     };
     fileInput.click();
