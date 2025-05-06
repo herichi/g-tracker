@@ -6,6 +6,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import PanelExcelImport from "@/components/PanelExcelImport";
 import {
   Select,
   SelectContent,
@@ -72,9 +73,12 @@ const Panels: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Panels</h1>
-        <Button className="bg-construction-blue hover:bg-construction-blue-dark" onClick={() => navigate('/panel/new')}>
-          <Plus className="mr-2 h-4 w-4" /> New Panel
-        </Button>
+        <div className="flex gap-3">
+          <PanelExcelImport />
+          <Button className="bg-construction-blue hover:bg-construction-blue-dark" onClick={() => navigate('/panel/new')}>
+            <Plus className="mr-2 h-4 w-4" /> New Panel
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
