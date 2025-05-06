@@ -153,8 +153,8 @@ const ProjectDetail: React.FC = () => {
               <div className="flex">
                 <Building className="h-5 w-5 text-gray-500 mr-2" />
                 <div>
-                  <p className="text-sm text-gray-500">Project ID</p>
-                  <p className="font-medium">{project.id}</p>
+                  <p className="text-sm text-gray-500">Project Name</p>
+                  <p className="font-medium">{project.name}</p>
                 </div>
               </div>
               
