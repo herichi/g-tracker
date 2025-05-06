@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProjectStatus } from "@/types";
 import { FileX, Search, Plus } from "lucide-react";
+import AddProjectDialog from "@/components/AddProjectDialog";
 
 const Projects: React.FC = () => {
   const { projects, panels, setSelectedProject } = useAppContext();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | "all">("all");
+  const [isAddProjectDialogOpen, setIsAddProjectDialogOpen] = useState(false);
 
   // Filter projects
   const filteredProjects = projects.filter(project => {
@@ -42,7 +44,10 @@ const Projects: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Projects</h1>
-        <Button className="bg-construction-blue hover:bg-construction-blue-dark">
+        <Button 
+          className="bg-construction-blue hover:bg-construction-blue-dark"
+          onClick={() => setIsAddProjectDialogOpen(true)}
+        >
           <Plus className="mr-2 h-4 w-4" /> New Project
         </Button>
       </div>
@@ -164,12 +169,21 @@ const Projects: React.FC = () => {
                 ? `We couldn't find any projects matching "${searchTerm}"`
                 : `There are no ${statusFilter !== 'all' ? statusFilter : ''} projects to display`}
             </p>
-            <Button className="bg-construction-blue hover:bg-construction-blue-dark">
+            <Button 
+              className="bg-construction-blue hover:bg-construction-blue-dark"
+              onClick={() => setIsAddProjectDialogOpen(true)}
+            >
               <Plus className="mr-2 h-4 w-4" /> Add New Project
             </Button>
           </div>
         </Card>
       )}
+      
+      {/* Add Project Dialog */}
+      <AddProjectDialog 
+        isOpen={isAddProjectDialogOpen} 
+        onClose={() => setIsAddProjectDialogOpen(false)} 
+      />
     </div>
   );
 };
