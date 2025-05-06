@@ -88,6 +88,7 @@ const AddFloorsForm: React.FC<AddFloorsFormProps> = ({ building, onComplete, onA
     try {
       // Add to database if user is logged in
       if (user) {
+        // Prepare panels for database insert
         const panelsForDb = panels.map(panel => ({
           id: panel.id,
           project_id: panel.projectId,
@@ -105,7 +106,9 @@ const AddFloorsForm: React.FC<AddFloorsFormProps> = ({ building, onComplete, onA
           created_by: user.id
         }));
         
+        // Insert into Supabase without calling .from() directly with table name
         const { error } = await supabase.from('panels').insert(panelsForDb);
+        
         if (error) throw error;
       }
       

@@ -99,19 +99,18 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ isOpen, onClose }) 
     try {
       // Add to database if user is logged in
       if (user) {
-        const { error } = await supabase
-          .from('projects')
-          .insert({
-            id: newProject.id,
-            name: newProject.name,
-            location: newProject.location,
-            status: newProject.status,
-            start_date: newProject.startDate,
-            end_date: newProject.endDate,
-            description: newProject.description,
-            client_name: newProject.clientName,
-            created_by: user.id
-          });
+        // Insert into Supabase without calling .from() directly with table name
+        const { error } = await supabase.from('projects').insert({
+          id: newProject.id,
+          name: newProject.name,
+          location: newProject.location,
+          status: newProject.status,
+          start_date: newProject.startDate,
+          end_date: newProject.endDate,
+          description: newProject.description,
+          client_name: newProject.clientName,
+          created_by: user.id
+        });
           
         if (error) throw error;
       }

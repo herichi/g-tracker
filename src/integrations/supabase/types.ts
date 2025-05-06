@@ -9,6 +9,113 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      buildings: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          floors: number
+          id: string
+          name: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          floors: number
+          id: string
+          name: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          floors?: number
+          id?: string
+          name?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buildings_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      panels: {
+        Row: {
+          building_id: string
+          created_at: string
+          created_by: string
+          floor_number: number
+          height: number
+          id: string
+          manufactured_date: string
+          name: string
+          project_id: string
+          serial_number: string
+          status: string
+          thickness: number
+          type: string
+          weight: number
+          width: number
+        }
+        Insert: {
+          building_id: string
+          created_at?: string
+          created_by: string
+          floor_number: number
+          height: number
+          id: string
+          manufactured_date: string
+          name: string
+          project_id: string
+          serial_number: string
+          status: string
+          thickness: number
+          type: string
+          weight: number
+          width: number
+        }
+        Update: {
+          building_id?: string
+          created_at?: string
+          created_by?: string
+          floor_number?: number
+          height?: number
+          id?: string
+          manufactured_date?: string
+          name?: string
+          project_id?: string
+          serial_number?: string
+          status?: string
+          thickness?: number
+          type?: string
+          weight?: number
+          width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "panels_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "buildings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "panels_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -33,6 +140,45 @@ export type Database = {
           role?: string | null
           updated_at?: string | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          client_name: string
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string | null
+          id: string
+          location: string
+          name: string
+          start_date: string
+          status: string
+        }
+        Insert: {
+          client_name: string
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date?: string | null
+          id: string
+          location: string
+          name: string
+          start_date: string
+          status: string
+        }
+        Update: {
+          client_name?: string
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string
+          name?: string
+          start_date?: string
+          status?: string
         }
         Relationships: []
       }

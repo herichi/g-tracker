@@ -66,16 +66,15 @@ const AddBuildingForm: React.FC<AddBuildingFormProps> = ({ projectId, onComplete
     try {
       // Add to database if user is logged in
       if (user) {
-        const { error } = await supabase
-          .from('buildings')
-          .insert({
-            id: newBuilding.id,
-            project_id: newBuilding.projectId,
-            name: newBuilding.name,
-            floors: newBuilding.floors,
-            description: newBuilding.description,
-            created_by: user.id
-          });
+        // Insert into Supabase without calling .from() directly with table name
+        const { error } = await supabase.from('buildings').insert({
+          id: newBuilding.id,
+          project_id: newBuilding.projectId,
+          name: newBuilding.name,
+          floors: newBuilding.floors,
+          description: newBuilding.description,
+          created_by: user.id
+        });
           
         if (error) throw error;
       }
