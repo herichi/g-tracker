@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Card, CardContent, CardHeader, CardTitle, 
@@ -131,45 +132,28 @@ export const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // First get all users from auth schema
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) {
-        throw authError;
-      }
-
-      if (!authUsers) {
-        setUsers([]);
-        return;
-      }
-
-      // Then get profile information from profiles table
-      const { data: profiles, error: profilesError } = await supabase
+      // Get profiles information from profiles table
+      const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, full_name, role');
+        .select('id, full_name, role, Email, updated_at');
 
-      if (profilesError) {
-        throw profilesError;
+      if (error) {
+        throw error;
       }
 
-      // Combine the data
-      const combinedUsers = authUsers.users.map(authUser => {
-        const profile = profiles?.find(p => p.id === authUser.id) || { 
-          full_name: null, 
-          role: 'data_entry' as UserRole
-        };
-
+      // Transform the data to match our UserProfile interface
+      const transformedUsers: UserProfile[] = profiles.map(profile => {
         return {
-          id: authUser.id,
-          email: authUser.email || 'No email',
+          id: profile.id,
+          email: profile.Email || 'No email',
           full_name: profile.full_name,
           role: profile.role,
-          created_at: authUser.created_at,
-          last_sign_in_at: authUser.last_sign_in_at
+          created_at: profile.updated_at || new Date().toISOString(),
+          last_sign_in_at: null // We don't have this info from profiles table
         };
       });
 
-      setUsers(combinedUsers);
+      setUsers(transformedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
@@ -180,29 +164,31 @@ export const UserManagement: React.FC = () => {
 
   const handleAddUser = async (data: z.infer<typeof addUserSchema>) => {
     try {
-      // Create the user in auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      // Sign up the user using standard Supabase auth
+      const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: data.fullName
+        options: {
+          data: {
+            full_name: data.fullName
+          }
         }
       });
 
-      if (authError) {
-        throw authError;
+      if (signUpError) {
+        throw signUpError;
       }
 
-      if (authData.user) {
+      if (signUpData.user) {
         // Update the profile with the role
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ 
             full_name: data.fullName,
-            role: data.role 
+            role: data.role,
+            Email: data.email
           })
-          .eq('id', authData.user.id);
+          .eq('id', signUpData.user.id);
 
         if (profileError) {
           throw profileError;
@@ -213,9 +199,9 @@ export const UserManagement: React.FC = () => {
         setIsAddDialogOpen(false);
         fetchUsers();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding user:", error);
-      toast.error("Failed to create user");
+      toast.error(error.message || "Failed to create user");
     }
   };
 
@@ -223,16 +209,6 @@ export const UserManagement: React.FC = () => {
     if (!selectedUser) return;
 
     try {
-      // Update user metadata
-      const { error: authError } = await supabase.auth.admin.updateUserById(
-        selectedUser.id,
-        { user_metadata: { full_name: data.fullName } }
-      );
-
-      if (authError) {
-        throw authError;
-      }
-
       // Update profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -251,9 +227,9 @@ export const UserManagement: React.FC = () => {
       setIsEditDialogOpen(false);
       setSelectedUser(null);
       fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating user:", error);
-      toast.error("Failed to update user");
+      toast.error(error.message || "Failed to update user");
     }
   };
 
@@ -267,8 +243,12 @@ export const UserManagement: React.FC = () => {
         return;
       }
 
-      // Delete the user
-      const { error } = await supabase.auth.admin.deleteUser(selectedUser.id);
+      // For now, just remove the user from profiles
+      // Note: This doesn't actually delete the auth account
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', selectedUser.id);
 
       if (error) {
         throw error;
@@ -278,9 +258,9 @@ export const UserManagement: React.FC = () => {
       setIsDeleteDialogOpen(false);
       setSelectedUser(null);
       fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting user:", error);
-      toast.error("Failed to delete user");
+      toast.error(error.message || "Failed to delete user");
     }
   };
 
