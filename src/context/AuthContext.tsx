@@ -4,9 +4,21 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 
+type UserRole = 
+  | 'admin'
+  | 'project_manager'
+  | 'data_entry'
+  | 'production_engineer'
+  | 'qc_factory'
+  | 'store_site'
+  | 'qc_site'
+  | 'foreman_site'
+  | 'site_engineer';
+
 type AuthContextType = {
   user: User | null;
   session: Session | null;
+  userRole: UserRole | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
@@ -20,6 +32,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,9 +44,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (event === 'SIGNED_IN') {
           toast.success('Signed in successfully');
+          fetchUserRole(session?.user?.id);
         }
         if (event === 'SIGNED_OUT') {
           toast.success('Signed out successfully');
+          setUserRole(null);
         }
       }
     );
@@ -42,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      fetchUserRole(session?.user?.id);
       setIsLoading(false);
     });
 
@@ -49,6 +65,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, []);
+
+  const fetchUserRole = async (userId: string | undefined) => {
+    if (!userId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+        
+      if (error) {
+        console.error("Error fetching user role:", error);
+      } else if (data) {
+        setUserRole(data.role as UserRole);
+      }
+    } catch (error) {
+      console.error("Error in role fetch:", error);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -107,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         session,
+        userRole,
         isLoading,
         signIn,
         signUp,

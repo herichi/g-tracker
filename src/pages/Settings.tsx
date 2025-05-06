@@ -1,14 +1,51 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
+import { UserManagement } from "@/components/UserManagement";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Tables } from "@/integrations/supabase/types";
 
 const Settings: React.FC = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user?.id) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+            
+          if (error) {
+            console.error("Error fetching user role:", error);
+            toast({
+              title: "Error",
+              description: "Failed to fetch user role",
+              variant: "destructive"
+            });
+          } else if (data) {
+            setUserRole(data.role);
+          }
+        } catch (error) {
+          console.error("Error in role fetch:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    fetchUserRole();
+  }, [user, toast]);
   
   const handleSaveSettings = () => {
     toast({
@@ -42,6 +79,7 @@ const Settings: React.FC = () => {
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="data">Data Management</TabsTrigger>
+          {userRole === 'admin' && <TabsTrigger value="users">User Management</TabsTrigger>}
           <TabsTrigger value="about">About</TabsTrigger>
         </TabsList>
         
@@ -200,6 +238,12 @@ const Settings: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
+        
+        {userRole === 'admin' && (
+          <TabsContent value="users">
+            <UserManagement />
+          </TabsContent>
+        )}
         
         <TabsContent value="about">
           <Card>

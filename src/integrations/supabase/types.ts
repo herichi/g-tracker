@@ -121,7 +121,7 @@ export type Database = {
           avatar_url: string | null
           full_name: string | null
           id: string
-          role: string | null
+          role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
           username: string | null
         }
@@ -129,7 +129,7 @@ export type Database = {
           avatar_url?: string | null
           full_name?: string | null
           id: string
-          role?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
           username?: string | null
         }
@@ -137,7 +137,7 @@ export type Database = {
           avatar_url?: string | null
           full_name?: string | null
           id?: string
-          role?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
           username?: string | null
         }
@@ -187,10 +187,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role:
+        | "admin"
+        | "project_manager"
+        | "data_entry"
+        | "production_engineer"
+        | "qc_factory"
+        | "store_site"
+        | "qc_site"
+        | "foreman_site"
+        | "site_engineer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -305,6 +317,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: [
+        "admin",
+        "project_manager",
+        "data_entry",
+        "production_engineer",
+        "qc_factory",
+        "store_site",
+        "qc_site",
+        "foreman_site",
+        "site_engineer",
+      ],
+    },
   },
 } as const

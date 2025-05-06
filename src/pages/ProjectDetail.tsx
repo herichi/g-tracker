@@ -2,6 +2,7 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppContext } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 import StatusBadge from "@/components/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,9 @@ const ProjectDetail: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { projects, panels, deleteProject } = useAppContext();
+  const { userRole } = useAuth();
+  const isAdmin = userRole === 'admin';
+  const isProjectManager = userRole === 'project_manager';
   
   const project = projects.find(p => p.id === projectId);
   const projectPanels = panels.filter(panel => panel.projectId === projectId);
@@ -130,18 +134,22 @@ const ProjectDetail: React.FC = () => {
         </div>
         
         <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            className="text-construction-blue border-construction-blue"
-          >
-            <Edit className="mr-2 h-4 w-4" /> Edit Project
-          </Button>
-          <Button 
-            variant="destructive"
-            onClick={handleDeleteProject}
-          >
-            <Trash2 className="mr-2 h-4 w-4" /> Delete
-          </Button>
+          {(isAdmin || isProjectManager) && (
+            <Button 
+              variant="outline"
+              className="text-construction-blue border-construction-blue"
+            >
+              <Edit className="mr-2 h-4 w-4" /> Edit Project
+            </Button>
+          )}
+          {isAdmin && (
+            <Button 
+              variant="destructive"
+              onClick={handleDeleteProject}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Delete
+            </Button>
+          )}
         </div>
       </div>
       
@@ -218,9 +226,11 @@ const ProjectDetail: React.FC = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg">Panel Status Overview</CardTitle>
-            <Button className="bg-construction-blue hover:bg-construction-blue-dark">
-              <Plus className="mr-2 h-4 w-4" /> Add Panel
-            </Button>
+            {(isAdmin || isProjectManager) && (
+              <Button className="bg-construction-blue hover:bg-construction-blue-dark">
+                <Plus className="mr-2 h-4 w-4" /> Add Panel
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
