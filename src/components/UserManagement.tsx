@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   Card, CardContent, CardHeader, CardTitle, 
@@ -33,7 +34,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { User, UserPlus, Edit, Trash2 } from "lucide-react";
+import { User, UserPlus, Edit, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useForm } from "react-hook-form";
@@ -57,6 +58,7 @@ interface UserProfile {
   role: string;
   created_at: string;
   last_sign_in_at: string | null;
+  expanded?: boolean;
 }
 
 type UserRole = 
@@ -110,6 +112,7 @@ export const UserManagement: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [sortBy, setSortBy] = useState<string>('full_name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
   const usersPerPage = 10;
 
   const addUserForm = useForm({
@@ -156,7 +159,7 @@ export const UserManagement: React.FC = () => {
       
       console.log("Querying profiles table with range:", from, to);
       
-      // CRITICAL FIX: Use different query approach to ensure all profiles are retrieved
+      // Use direct fetch from profiles table without any user filtering
       const { data: allProfiles, error, count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' })
@@ -192,7 +195,8 @@ export const UserManagement: React.FC = () => {
           full_name: profile.full_name,
           role: profile.role || 'data_entry',
           created_at: profile.updated_at || new Date().toISOString(),
-          last_sign_in_at: profile.last_sign_in_at
+          last_sign_in_at: profile.last_sign_in_at,
+          expanded: expandedUsers[profile.id] || false
         };
       });
 
@@ -325,6 +329,13 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  const toggleUserExpansion = (userId: string) => {
+    setExpandedUsers(prev => ({
+      ...prev,
+      [userId]: !prev[userId]
+    }));
+  };
+
   const renderPagination = () => {
     if (totalPages <= 1) return null;
     
@@ -448,6 +459,7 @@ export const UserManagement: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8"></TableHead>
                   <TableHead 
                     className="cursor-pointer" 
                     onClick={() => handleSortChange('full_name')}
@@ -478,64 +490,123 @@ export const UserManagement: React.FC = () => {
               <TableBody>
                 {users.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6 text-gray-500">
+                    <TableCell colSpan={6} className="text-center py-6 text-gray-500">
                       No users found
                     </TableCell>
                   </TableRow>
                 ) : (
                   users.map(user => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <div className="bg-gray-100 rounded-full p-2">
-                            <User size={16} className="text-gray-500" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{user.full_name || 'No name'}</p>
-                            <p className="text-sm text-gray-500">{user.email}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {getRoleNameForDisplay(user.role as any)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        {user.last_sign_in_at 
-                          ? new Date(user.last_sign_in_at).toLocaleDateString() 
-                          : 'Never'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
+                    <React.Fragment key={user.id}>
+                      <TableRow className={expandedUsers[user.id] ? "border-b-0" : ""}>
+                        <TableCell className="px-2">
                           <Button 
                             variant="ghost" 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setIsEditDialogOpen(true);
-                            }}
+                            size="sm" 
+                            className="h-8 w-8 p-0"
+                            onClick={() => toggleUserExpansion(user.id)}
                           >
-                            <Edit size={16} />
+                            {expandedUsers[user.id] ? 
+                              <ChevronUp className="h-4 w-4" /> : 
+                              <ChevronDown className="h-4 w-4" />}
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="text-red-500 hover:text-red-700"
-                            onClick={() => {
-                              setSelectedUser(user);
-                              setIsDeleteDialogOpen(true);
-                            }}
-                            disabled={user.id === currentUser?.id}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <div className="bg-gray-100 rounded-full p-2">
+                              <User size={16} className="text-gray-500" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{user.full_name || 'No name'}</p>
+                              <p className="text-sm text-gray-500">{user.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {getRoleNameForDisplay(user.role as any)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {user.last_sign_in_at 
+                            ? new Date(user.last_sign_in_at).toLocaleDateString() 
+                            : 'Never'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              <Edit size={16} />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setIsDeleteDialogOpen(true);
+                              }}
+                              disabled={user.id === currentUser?.id}
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {expandedUsers[user.id] && (
+                        <TableRow>
+                          <TableCell className="p-0"></TableCell>
+                          <TableCell colSpan={5} className="p-4 bg-gray-50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <h4 className="font-semibold mb-2">User Details</h4>
+                                <dl className="space-y-2">
+                                  <div className="grid grid-cols-3 gap-1">
+                                    <dt className="text-gray-500 text-sm">User ID:</dt>
+                                    <dd className="col-span-2 text-sm font-mono truncate">{user.id}</dd>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-1">
+                                    <dt className="text-gray-500 text-sm">Email:</dt>
+                                    <dd className="col-span-2 text-sm">{user.email}</dd>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-1">
+                                    <dt className="text-gray-500 text-sm">Role:</dt>
+                                    <dd className="col-span-2 text-sm">{getRoleNameForDisplay(user.role as any)}</dd>
+                                  </div>
+                                </dl>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold mb-2">Activity</h4>
+                                <dl className="space-y-2">
+                                  <div className="grid grid-cols-3 gap-1">
+                                    <dt className="text-gray-500 text-sm">Created:</dt>
+                                    <dd className="col-span-2 text-sm">
+                                      {new Date(user.created_at).toLocaleString()}
+                                    </dd>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-1">
+                                    <dt className="text-gray-500 text-sm">Last Login:</dt>
+                                    <dd className="col-span-2 text-sm">
+                                      {user.last_sign_in_at 
+                                        ? new Date(user.last_sign_in_at).toLocaleString() 
+                                        : 'Never'}
+                                    </dd>
+                                  </div>
+                                </dl>
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                   ))
                 )}
               </TableBody>
