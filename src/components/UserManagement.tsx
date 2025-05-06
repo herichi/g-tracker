@@ -36,7 +36,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { User, UserPlus, Edit, Trash2 } from "lucide-react";
-import { useToast } from "@/components/ui/sonner";
+import { toast } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -52,6 +52,17 @@ interface UserProfile {
   created_at: string;
   last_sign_in_at: string | null;
 }
+
+type UserRole = 
+  | 'admin'
+  | 'project_manager'
+  | 'data_entry'
+  | 'production_engineer'
+  | 'qc_factory'
+  | 'store_site'
+  | 'qc_site'
+  | 'foreman_site'
+  | 'site_engineer';
 
 const roleOptions = [
   { value: 'admin', label: 'Administrator' },
@@ -69,12 +80,16 @@ const addUserSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   fullName: z.string().min(2, { message: "Full name is required" }),
-  role: z.string().min(1, { message: "Role is required" })
+  role: z.enum(['admin', 'project_manager', 'data_entry', 'production_engineer', 'qc_factory', 'store_site', 'qc_site', 'foreman_site', 'site_engineer'], { 
+    message: "Role is required" 
+  })
 });
 
 const editUserSchema = z.object({
   fullName: z.string().min(2, { message: "Full name is required" }),
-  role: z.string().min(1, { message: "Role is required" })
+  role: z.enum(['admin', 'project_manager', 'data_entry', 'production_engineer', 'qc_factory', 'store_site', 'qc_site', 'foreman_site', 'site_engineer'], { 
+    message: "Role is required" 
+  })
 });
 
 export const UserManagement: React.FC = () => {
@@ -84,7 +99,6 @@ export const UserManagement: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
-  const toast = useToast();
   const { user: currentUser } = useAuth();
 
   const addUserForm = useForm({
@@ -93,7 +107,7 @@ export const UserManagement: React.FC = () => {
       email: "",
       password: "",
       fullName: "",
-      role: "data_entry"
+      role: "data_entry" as UserRole
     }
   });
 
@@ -101,7 +115,7 @@ export const UserManagement: React.FC = () => {
     resolver: zodResolver(editUserSchema),
     defaultValues: {
       fullName: "",
-      role: ""
+      role: "data_entry" as UserRole
     }
   });
 
@@ -112,7 +126,7 @@ export const UserManagement: React.FC = () => {
   useEffect(() => {
     if (selectedUser && isEditDialogOpen) {
       editUserForm.setValue("fullName", selectedUser.full_name || "");
-      editUserForm.setValue("role", selectedUser.role);
+      editUserForm.setValue("role", selectedUser.role as UserRole);
     }
   }, [selectedUser, isEditDialogOpen, editUserForm]);
 
