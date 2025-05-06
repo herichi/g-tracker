@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
@@ -54,9 +53,10 @@ type UserRole =
   | 'foreman_site'
   | 'site_engineer';
 
+// Updated User interface to match Supabase's structure
 interface User {
   id: string;
-  email: string;
+  Email: string; // Changed from email to Email to match Supabase field
   full_name: string | null;
   role: UserRole;
   active: boolean;
@@ -130,7 +130,7 @@ const UserManagementTable = ({ filterRole, filterInactive = false }: UserManagem
   const handleEditUser = (user: User) => {
     setCurrentUser(user);
     setFormData({
-      email: user.email || "",
+      email: user.Email || "",
       full_name: user.full_name || "",
       role: user.role,
       active: user.active,
@@ -289,7 +289,7 @@ const UserManagementTable = ({ filterRole, filterInactive = false }: UserManagem
                 users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.full_name || "—"}</TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.Email}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="capitalize">
                         {user.role.replace(/_/g, " ")}

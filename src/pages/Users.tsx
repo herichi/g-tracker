@@ -22,7 +22,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const Users = () => {
   const { userRole, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [loadingUsers, setLoadingUsers] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Check if user has admin role
