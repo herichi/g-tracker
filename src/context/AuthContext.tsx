@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,7 +99,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const fetchUserRole = async (userId: string | undefined) => {
-    if (!userId) return;
+    if (!userId) {
+      setIsLoading(false);
+      return;
+    }
     
     try {
       console.log(`Fetching role for user ${userId}`);
@@ -116,8 +118,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log(`Role for user ${userId}:`, data.role);
         setUserRole(data.role as UserRole);
       }
+      setIsLoading(false);
     } catch (error) {
       console.error("Error in role fetch:", error);
+      setIsLoading(false);
     }
   };
 

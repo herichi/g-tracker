@@ -154,30 +154,29 @@ export const UserManagement: React.FC = () => {
       const from = (currentPage - 1) * usersPerPage;
       const to = from + usersPerPage - 1;
       
-      // Query with pagination and sorting
       console.log("Querying profiles table with range:", from, to);
       
-      // IMPORTANT: Fetch ALL profiles without filtering by current user
-      const { data: profiles, error, count } = await supabase
+      // CRITICAL FIX: Use different query approach to ensure all profiles are retrieved
+      const { data: allProfiles, error, count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' })
         .order(sortBy, { ascending: sortOrder === 'asc' })
         .range(from, to);
 
       if (error) {
-        console.error("Supabase query error:", error);
+        console.error("Error fetching profiles:", error);
         throw error;
       }
 
-      // Calculate total pages if count is available
+      console.log("Profiles data retrieved successfully:", allProfiles);
+      console.log("Total profiles count:", count);
+
       if (count !== null) {
         setTotalPages(Math.max(1, Math.ceil(count / usersPerPage)));
         console.log(`Total records: ${count}, Total pages: ${Math.ceil(count / usersPerPage)}`);
       }
 
-      console.log('Raw profiles data:', profiles);
-
-      if (!profiles || profiles.length === 0) {
+      if (!allProfiles || allProfiles.length === 0) {
         console.warn("No profiles found in the database");
         setUsers([]);
         setIsLoading(false);
@@ -185,7 +184,7 @@ export const UserManagement: React.FC = () => {
       }
 
       // Transform the profiles to our UserProfile interface
-      const transformedUsers: UserProfile[] = profiles.map(profile => {
+      const transformedUsers: UserProfile[] = allProfiles.map(profile => {
         return {
           id: profile.id,
           // Use Email field if available, or show 'No email' if not
@@ -197,10 +196,10 @@ export const UserManagement: React.FC = () => {
         };
       });
 
-      console.log('Transformed users:', transformedUsers);
+      console.log('Transformed users data for display:', transformedUsers);
       setUsers(transformedUsers);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error in fetchUsers function:", error);
       toast.error("Failed to load users");
     } finally {
       setIsLoading(false);
@@ -316,8 +315,14 @@ export const UserManagement: React.FC = () => {
   };
 
   const handleSortChange = (column: string) => {
-    if (sortBy !== column) return null;
-    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    if (sortBy === column) {
+      // If clicking the same column, toggle sort order
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // If clicking a new column, set it as sort column with ascending order
+      setSortBy(column);
+      setSortOrder('asc');
+    }
   };
 
   const renderPagination = () => {
