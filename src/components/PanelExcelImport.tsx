@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from '@/components/ui/use-toast';
-import { FileExcel, Upload } from 'lucide-react';
+import { FileText, Upload } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 interface PanelExcelImportProps {
@@ -215,7 +215,7 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
       toast({
         title: "Import Completed with Errors",
         description: `Added ${added} panels, updated ${updated} panels. ${failed} panels failed to import.`,
-        variant: "warning"
+        variant: "destructive"
       });
     } else {
       toast({
@@ -238,7 +238,10 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.xlsx,.xls,.csv';
-    fileInput.onchange = (e) => handleFileUpload(e as React.ChangeEvent<HTMLInputElement>);
+    fileInput.onchange = (e) => {
+      const event = e as React.ChangeEvent<HTMLInputElement>;
+      handleFileUpload(event);
+    };
     fileInput.click();
   };
 
@@ -249,7 +252,7 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
         className="bg-white flex gap-2"
         onClick={() => setIsDialogOpen(true)}
       >
-        <FileExcel className="h-4 w-4" /> Import Excel
+        <FileText className="h-4 w-4" /> Import Excel
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
