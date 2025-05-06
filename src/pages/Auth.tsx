@@ -120,7 +120,14 @@ const Auth = () => {
     <div className="min-h-screen bg-construction-gray-lightest flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2 text-construction-blue-dark">Qatar Panels</h1>
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/lovable-uploads/89cede0c-f6f5-497b-9d27-a005814e1e41.png" 
+              alt="Doha Extraco Logo" 
+              className="h-16"
+            />
+          </div>
+          <h1 className="text-3xl font-bold mb-2 text-construction-blue-dark">G-Tracker</h1>
           <p className="text-gray-600">Sign in to access your dashboard</p>
         </div>
 
