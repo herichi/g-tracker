@@ -37,6 +37,8 @@ const UserManagementTable = ({ filterRole, filterInactive = false }: UserManagem
 
       if (filterInactive) {
         query = query.eq('active', false);
+      } else if (filterInactive === false) {
+        query = query.eq('active', true);
       }
 
       const { data, error } = await query;
