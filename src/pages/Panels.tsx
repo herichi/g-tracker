@@ -14,14 +14,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PanelStatus } from "@/types";
-import { FileX, Search, Plus, Edit, Filter } from "lucide-react";
+import { FileX, Search, Plus, Edit, Filter, PanelLeft, Building } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 const Panels: React.FC = () => {
-  const { projects, panels } = useAppContext();
+  const { projects, panels, buildings } = useAppContext();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<PanelStatus | "all">("all");
   const [projectFilter, setProjectFilter] = useState<string | "all">("all");
+  const [buildingFilter, setBuildingFilter] = useState<string | "all">("all");
 
   // Filter panels
   const filteredPanels = panels.filter(panel => {
@@ -37,14 +46,24 @@ const Panels: React.FC = () => {
     // Apply project filter
     const matchesProject = projectFilter === "all" || panel.projectId === projectFilter;
     
-    return matchesSearch && matchesStatus && matchesProject;
+    // Apply building filter
+    const matchesBuilding = buildingFilter === "all" || 
+      (buildingFilter === "none" && !panel.buildingId) ||
+      panel.buildingId === buildingFilter;
+    
+    return matchesSearch && matchesStatus && matchesProject && matchesBuilding;
   });
+
+  // Get buildings for the selected project
+  const projectBuildings = projectFilter !== "all" 
+    ? buildings.filter(building => building.projectId === projectFilter) 
+    : [];
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Panels</h1>
-        <Button className="bg-construction-blue hover:bg-construction-blue-dark">
+        <Button className="bg-construction-blue hover:bg-construction-blue-dark" onClick={() => navigate('/panel/new')}>
           <Plus className="mr-2 h-4 w-4" /> New Panel
         </Button>
       </div>
@@ -58,7 +77,7 @@ const Panels: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -78,17 +97,28 @@ const Panels: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="manufactured">Manufactured</SelectItem>
+                <SelectItem value="issued">Issued</SelectItem>
+                <SelectItem value="held">Held</SelectItem>
+                <SelectItem value="produced">Produced</SelectItem>
+                <SelectItem value="proceed_delivery">Proceed for Delivery</SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>
+                <SelectItem value="approved_material">Approved Material</SelectItem>
+                <SelectItem value="rejected_material">Rejected Material</SelectItem>
                 <SelectItem value="installed">Installed</SelectItem>
+                <SelectItem value="checked">Checked</SelectItem>
                 <SelectItem value="inspected">Inspected</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="approved_final">Approved Final</SelectItem>
+                <SelectItem value="broken_site">Broken at Site</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
 
             <Select 
               value={projectFilter} 
-              onValueChange={setProjectFilter}
+              onValueChange={(value) => {
+                setProjectFilter(value);
+                setBuildingFilter("all");
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Filter by project" />
@@ -102,6 +132,37 @@ const Panels: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
+
+            <Select 
+              value={buildingFilter} 
+              onValueChange={setBuildingFilter}
+              disabled={projectFilter === "all"}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by building" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Buildings</SelectItem>
+                <SelectItem value="none">No Building</SelectItem>
+                {projectBuildings.map(building => (
+                  <SelectItem key={building.id} value={building.id}>
+                    {building.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("all");
+                setProjectFilter("all");
+                setBuildingFilter("all");
+              }}
+            >
+              Clear Filters
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -110,65 +171,80 @@ const Panels: React.FC = () => {
       <Card>
         <CardContent className="p-0">
           {filteredPanels.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Serial Number</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dimensions</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredPanels.map((panel) => {
-                    const project = projects.find(p => p.id === panel.projectId);
-                    
-                    return (
-                      <tr key={panel.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap font-medium">
-                          {panel.serialNumber}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {panel.type}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Serial Number</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Building</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Dimensions</TableHead>
+                  <TableHead>Weight</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredPanels.map((panel) => {
+                  const project = projects.find(p => p.id === panel.projectId);
+                  const building = panel.buildingId 
+                    ? buildings.find(b => b.id === panel.buildingId) 
+                    : null;
+                  
+                  return (
+                    <TableRow key={panel.id}>
+                      <TableCell className="font-medium">
+                        {panel.serialNumber}
+                      </TableCell>
+                      <TableCell>
+                        {panel.type}
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="link" 
+                          onClick={() => navigate(`/project/${panel.projectId}`)}
+                          className="p-0 h-auto text-construction-blue"
+                        >
+                          {project?.name || 'Unknown Project'}
+                        </Button>
+                      </TableCell>
+                      <TableCell>
+                        {building ? (
                           <Button 
                             variant="link" 
-                            onClick={() => navigate(`/project/${panel.projectId}`)}
+                            onClick={() => navigate(`/building/${building.id}`)}
                             className="p-0 h-auto text-construction-blue"
                           >
-                            {project?.name || 'Unknown Project'}
+                            {building.name}
                           </Button>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <StatusBadge status={panel.status} />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {panel.dimensions.width} × {panel.dimensions.height} × {panel.dimensions.thickness} mm
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {panel.weight} kg
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0"
-                            onClick={() => navigate(`/panel/${panel.id}`)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        ) : (
+                          <span className="text-gray-500">Not Assigned</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={panel.status} />
+                      </TableCell>
+                      <TableCell>
+                        {panel.dimensions.width} × {panel.dimensions.height} × {panel.dimensions.thickness} mm
+                      </TableCell>
+                      <TableCell>
+                        {panel.weight} kg
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          onClick={() => navigate(`/panel/${panel.id}`)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           ) : (
             <div className="p-6 text-center">
               <div className="flex flex-col items-center justify-center py-12">

@@ -11,6 +11,25 @@ export interface Project {
   description?: string;
   clientName: string;
   panelCount: number;
+  buildings?: Building[];
+}
+
+export interface Building {
+  id: string;
+  projectId: string;
+  name: string;
+  floors: number;
+  description?: string;
+}
+
+export interface PanelGroup {
+  id: string;
+  name: string;
+  projectId: string;
+  buildingId?: string;
+  panelIds: string[];
+  createdAt: string;
+  description?: string;
 }
 
 export type PanelStatus = 
@@ -50,6 +69,7 @@ export interface RoleStatusMapping {
 export interface Panel {
   id: string;
   projectId: string;
+  buildingId?: string;
   serialNumber: string;
   type: string;
   status: PanelStatus;
@@ -66,6 +86,7 @@ export interface Panel {
   inspectedDate?: string;
   notes?: string;
   qrCode?: string;
+  groupIds?: string[];
   statusHistory?: {
     status: PanelStatus;
     date: string;

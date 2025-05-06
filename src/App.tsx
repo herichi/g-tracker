@@ -13,6 +13,7 @@ import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Panels from "./pages/Panels";
 import PanelDetail from "./pages/PanelDetail";
+import BuildingDetail from "./pages/BuildingDetail";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -47,6 +48,14 @@ const App = () => (
               element={
                 <AppLayout>
                   <ProjectDetail />
+                </AppLayout>
+              } 
+            />
+            <Route 
+              path="/building/:buildingId" 
+              element={
+                <AppLayout>
+                  <BuildingDetail />
                 </AppLayout>
               } 
             />

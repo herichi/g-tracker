@@ -40,11 +40,14 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status, pulse = false, classN
   };
   
   const getStatusLabel = () => {
-    // Convert underscores to spaces and capitalize each word
-    return status
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    if (typeof status === 'string') {
+      // Convert underscores to spaces and capitalize each word
+      return status
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    return status;
   };
 
   return (
