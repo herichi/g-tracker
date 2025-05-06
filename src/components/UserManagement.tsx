@@ -57,7 +57,6 @@ interface UserProfile {
   role: string;
   created_at: string;
   last_sign_in_at: string | null;
-  expanded?: boolean;
 }
 
 type UserRole = 
@@ -158,8 +157,8 @@ export const UserManagement: React.FC = () => {
       
       console.log("Querying profiles table with range:", from, to);
       
-      // Use direct fetch from profiles table without any filtering
-      // This should return ALL users in the profiles table
+      // Important: Use direct fetch from profiles table WITHOUT filtering by user_id
+      // to get ALL users in the system
       const { data: allProfiles, error, count } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' })
@@ -190,13 +189,11 @@ export const UserManagement: React.FC = () => {
       const transformedUsers: UserProfile[] = allProfiles.map(profile => {
         return {
           id: profile.id,
-          // Use Email field if available, or show 'No email' if not
           email: profile.Email || 'No email',
           full_name: profile.full_name,
           role: profile.role || 'data_entry',
           created_at: profile.updated_at || new Date().toISOString(),
-          last_sign_in_at: profile.last_sign_in_at,
-          expanded: expandedUsers[profile.id] || false
+          last_sign_in_at: profile.last_sign_in_at
         };
       });
 
@@ -444,7 +441,7 @@ export const UserManagement: React.FC = () => {
         </div>
         <Button 
           onClick={() => setIsAddDialogOpen(true)}
-          className="volta-bg hover:volta-bg-dark"
+          className="bg-construction-blue hover:bg-construction-blue-dark"
         >
           <UserPlus className="mr-2 h-4 w-4" /> Add User
         </Button>
@@ -452,7 +449,7 @@ export const UserManagement: React.FC = () => {
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-volta-bg"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-construction-blue"></div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -464,25 +461,25 @@ export const UserManagement: React.FC = () => {
                     className="cursor-pointer" 
                     onClick={() => handleSortChange('full_name')}
                   >
-                    User {getSortIndicator('full_name')}
+                    User {sortBy === 'full_name' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
                   </TableHead>
                   <TableHead 
                     className="cursor-pointer" 
                     onClick={() => handleSortChange('role')}
                   >
-                    Role {getSortIndicator('role')}
+                    Role {sortBy === 'role' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
                   </TableHead>
                   <TableHead 
                     className="cursor-pointer" 
                     onClick={() => handleSortChange('updated_at')}
                   >
-                    Created {getSortIndicator('updated_at')}
+                    Created {sortBy === 'updated_at' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
                   </TableHead>
                   <TableHead 
                     className="cursor-pointer" 
                     onClick={() => handleSortChange('last_sign_in_at')}
                   >
-                    Last Login {getSortIndicator('last_sign_in_at')}
+                    Last Login {sortBy === 'last_sign_in_at' ? (sortOrder === 'asc' ? ' ↑' : ' ↓') : ''}
                   </TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
