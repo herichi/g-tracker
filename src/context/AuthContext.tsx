@@ -48,10 +48,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Update last_sign_in_at in profiles table
           if (session?.user) {
             try {
+              const currentTime = new Date().toISOString();
+              
               // Use the typed definition to ensure we're only passing valid fields
               const updateData = {
-                updated_at: new Date().toISOString(),
-                last_sign_in_at: new Date().toISOString()
+                updated_at: currentTime,
+                last_sign_in_at: currentTime
               };
               
               const { error } = await supabase

@@ -84,3 +84,19 @@
 .volta-chart-green {
   color: #4BD763;
 }
+
+/* Button styles with Volta theme */
+.volta-btn {
+  background-color: #8F2D3B;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.volta-btn:hover {
+  background-color: #79242F;
+}
+
+/* Card styles with Volta theme */
+.volta-card {
+  border-color: #8F2D3B;
+}

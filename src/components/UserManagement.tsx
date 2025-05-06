@@ -132,10 +132,10 @@ export const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Get profiles information from profiles table
+      // Get all users from the auth.users table via the profiles table
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, full_name, role, Email, updated_at');
+        .select('*');
 
       if (error) {
         throw error;
@@ -149,7 +149,7 @@ export const UserManagement: React.FC = () => {
           full_name: profile.full_name,
           role: profile.role,
           created_at: profile.updated_at || new Date().toISOString(),
-          last_sign_in_at: null // We don't have this info from profiles table
+          last_sign_in_at: profile.last_sign_in_at
         };
       });
 
@@ -275,7 +275,7 @@ export const UserManagement: React.FC = () => {
         </div>
         <Button 
           onClick={() => setIsAddDialogOpen(true)}
-          className="bg-construction-blue hover:bg-construction-blue-dark"
+          className="volta-bg hover:volta-bg-dark"
         >
           <UserPlus className="mr-2 h-4 w-4" /> Add User
         </Button>
@@ -283,7 +283,7 @@ export const UserManagement: React.FC = () => {
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-construction-blue"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-volta-bg"></div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -453,7 +453,7 @@ export const UserManagement: React.FC = () => {
                 </Button>
                 <Button 
                   type="submit" 
-                  className="bg-construction-blue hover:bg-construction-blue-dark"
+                  className="volta-bg hover:volta-bg-dark"
                 >
                   Add User
                 </Button>
@@ -524,7 +524,7 @@ export const UserManagement: React.FC = () => {
                 </Button>
                 <Button 
                   type="submit" 
-                  className="bg-construction-blue hover:bg-construction-blue-dark"
+                  className="volta-bg hover:volta-bg-dark"
                 >
                   Save Changes
                 </Button>
