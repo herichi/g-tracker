@@ -15,37 +15,39 @@ const Settings: React.FC = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [lastLogin, setLastLogin] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    const fetchUserRole = async () => {
+    const fetchUserData = async () => {
       if (user?.id) {
         try {
           const { data, error } = await supabase
             .from('profiles')
-            .select('role')
+            .select('role, last_sign_in_at')
             .eq('id', user.id)
             .single();
             
           if (error) {
-            console.error("Error fetching user role:", error);
+            console.error("Error fetching user data:", error);
             toast({
               title: "Error",
-              description: "Failed to fetch user role",
+              description: "Failed to fetch user data",
               variant: "destructive"
             });
           } else if (data) {
             setUserRole(data.role);
+            setLastLogin(data.last_sign_in_at);
           }
         } catch (error) {
-          console.error("Error in role fetch:", error);
+          console.error("Error in data fetch:", error);
         } finally {
           setIsLoading(false);
         }
       }
     };
     
-    fetchUserRole();
+    fetchUserData();
   }, [user, toast]);
   
   const handleSaveSettings = () => {
@@ -81,6 +83,11 @@ const Settings: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
+        {lastLogin && (
+          <div className="text-sm text-gray-600">
+            Last login: {new Date(lastLogin).toLocaleString()}
+          </div>
+        )}
       </div>
       
       <Tabs defaultValue="general">
