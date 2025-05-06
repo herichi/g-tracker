@@ -1,4 +1,3 @@
-
 export type ProjectStatus = 'active' | 'completed' | 'on-hold';
 
 export interface Project {
@@ -160,9 +159,10 @@ export const getRoleNameForDisplay = (role: UserRole): string => {
     case 'admin': return 'Administrator';
     default: 
       // Make sure we handle the case properly by checking if role is a string
-      if (typeof role === 'string') {
-        return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-      }
-      return String(role);
+      const roleAsString = String(role);
+      return roleAsString
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
   }
 };
