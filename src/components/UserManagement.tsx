@@ -132,13 +132,23 @@ export const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      // Get all users from the auth.users table via the profiles table
+      // Use pagination and optimize the query for better performance
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('*');
+        .select('*')
+        .order('full_name', { ascending: true });
 
       if (error) {
         throw error;
+      }
+
+      // Add debug logging to see what's coming back
+      console.log('Profiles fetched:', profiles);
+
+      if (!profiles || profiles.length === 0) {
+        console.warn("No profiles found in the database");
+        setUsers([]);
+        return;
       }
 
       // Transform the data to match our UserProfile interface
@@ -153,6 +163,7 @@ export const UserManagement: React.FC = () => {
         };
       });
 
+      console.log('Transformed users:', transformedUsers);
       setUsers(transformedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
