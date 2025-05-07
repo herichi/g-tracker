@@ -26,32 +26,36 @@ const UserManagementTable = ({ filterRole, filterInactive = false }: UserManagem
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      console.log("Fetching all users from profiles table");
+      console.log(`Fetching users with filters: role=${filterRole}, inactive=${filterInactive}`);
       
-      // First get all users without any filters
-      let { data: allUsers, error } = await supabase
-        .from('profiles')
-        .select('*');
+      // Build query based on filters
+      let query = supabase.from('profiles').select('*');
+      
+      // Apply role filter if specified
+      if (filterRole) {
+        console.log(`Filtering by role: ${filterRole}`);
+        query = query.eq('role', filterRole);
+      }
+      
+      // Apply active status filter if specified
+      if (filterInactive !== undefined) {
+        const activeStatus = !filterInactive;
+        console.log(`Filtering by active status: ${activeStatus}`);
+        query = query.eq('active', activeStatus);
+      }
+      
+      // Execute the query
+      const { data, error } = await query;
       
       if (error) throw error;
       
-      console.log(`Retrieved ${allUsers?.length || 0} total users from database`);
+      console.log(`Retrieved ${data?.length || 0} users from database`);
       
-      // Then apply filters in memory if needed
-      let filteredUsers = allUsers || [];
-      
-      if (filterRole) {
-        console.log(`Filtering by role: ${filterRole}`);
-        filteredUsers = filteredUsers.filter(user => user.role === filterRole);
+      if (data) {
+        setUsers(data as User[]);
+      } else {
+        setUsers([]);
       }
-
-      if (filterInactive !== undefined) {
-        console.log(`Filtering by active status: ${!filterInactive}`);
-        filteredUsers = filteredUsers.filter(user => user.active === !filterInactive);
-      }
-      
-      console.log(`After filtering: ${filteredUsers.length} users match criteria`);
-      setUsers(filteredUsers as User[]);
     } catch (error: any) {
       toast.error(`Error fetching users: ${error.message}`);
       console.error("Error fetching users:", error);
