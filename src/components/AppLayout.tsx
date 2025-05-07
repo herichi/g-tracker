@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import {
   LogOut,
   Mail,
   Users,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -49,9 +49,9 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       href: "/panels"
     },
     {
-      label: "Messages",
-      icon: <Mail className="h-5 w-5" />,
-      href: "/messages"
+      label: "Reports",
+      icon: <FileText className="h-5 w-5" />,
+      href: "/reports"
     },
     // Add Users section (only visible to admins)
     ...(userRole === "admin" ? [
@@ -190,10 +190,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             <h1 className="text-xl font-semibold">Qatar Panel Tracker</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="relative text-white">
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">2</span>
-              <Mail className="h-5 w-5" />
-            </Button>
             <div className="w-8 h-8 rounded-full bg-volta-accent flex items-center justify-center">
               {user?.email?.charAt(0).toUpperCase() || 'U'}
             </div>
