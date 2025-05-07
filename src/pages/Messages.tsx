@@ -30,24 +30,27 @@ const Messages = () => {
     const fetchAllUsers = async () => {
       setLoading(true);
       try {
-        console.log("Messages page: Fetching all users directly from profiles table with unfiltered query");
+        console.log("Messages page: Attempting to fetch ALL profiles with raw query");
         
-        // Direct query with explicit select and no filters to ensure all rows are returned
-        const { data, error, status } = await supabase
+        // Try with a different approach to ensure we get all rows
+        const { data, error, status, count } = await supabase
           .from('profiles')
-          .select('*');
+          .select('*', { count: 'exact' });
+        
+        console.log(`Messages page: Query completed with status: ${status}, count: ${count}`);
         
         if (error) {
+          console.error("Error details:", error);
           throw error;
         }
         
-        console.log(`Messages page: Response status code: ${status}`);
-        console.log(`Messages page: Successfully retrieved ${data?.length || 0} users from database:`, data);
-        
-        if (data && data.length > 0) {
+        if (data) {
+          console.log(`Messages page: Successfully retrieved ${data.length} users from database`);
+          console.log("User data sample:", data);
           setUsers(data as User[]);
         } else {
-          console.warn("Messages page: No users found or empty array returned");
+          console.warn("Messages page: No data returned from query");
+          setUsers([]);
         }
       } catch (err: any) {
         console.error("Error fetching users in Messages page:", err);
@@ -66,7 +69,7 @@ const Messages = () => {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Database Profiles Extract</h2>
         <p className="text-muted-foreground">
-          Direct extract from the 'profiles' table in Supabase - showing all users
+          Direct extract from the 'profiles' table in Supabase - showing all users ({users.length} found)
         </p>
       </div>
       
