@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User } from "@/types/user";
+import { toast } from "@/components/ui/sonner";
 
 const Messages = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -29,10 +30,10 @@ const Messages = () => {
     const fetchAllUsers = async () => {
       setLoading(true);
       try {
-        console.log("Messages page: Fetching all users directly from the profiles table");
+        console.log("Messages page: Fetching all users directly from profiles table with unfiltered query");
         
-        // Direct query to fetch ALL users regardless of filters
-        const { data, error } = await supabase
+        // Direct query with explicit select and no filters to ensure all rows are returned
+        const { data, error, status } = await supabase
           .from('profiles')
           .select('*');
         
@@ -40,11 +41,18 @@ const Messages = () => {
           throw error;
         }
         
+        console.log(`Messages page: Response status code: ${status}`);
         console.log(`Messages page: Successfully retrieved ${data?.length || 0} users from database:`, data);
-        setUsers(data as User[]);
+        
+        if (data && data.length > 0) {
+          setUsers(data as User[]);
+        } else {
+          console.warn("Messages page: No users found or empty array returned");
+        }
       } catch (err: any) {
         console.error("Error fetching users in Messages page:", err);
         setError(err.message);
+        toast.error(`Failed to load users: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -56,17 +64,17 @@ const Messages = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Messages</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Database Profiles Extract</h2>
         <p className="text-muted-foreground">
-          All users extracted directly from profiles table
+          Direct extract from the 'profiles' table in Supabase - showing all users
         </p>
       </div>
       
       <Card>
         <CardHeader>
-          <CardTitle>User Database Extract</CardTitle>
+          <CardTitle>Complete Profiles Table Data</CardTitle>
           <CardDescription>
-            Direct extract from the profiles table - showing all users in the database
+            Unfiltered extract showing all records from the 'profiles' table in Supabase
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -91,6 +99,7 @@ const Messages = () => {
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Last Login</TableHead>
+                    <TableHead>Username</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -106,7 +115,7 @@ const Messages = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={user.active ? "default" : "destructive"}>
+                          <Badge variant={user.active ? "success" : "destructive"}>
                             {user.active ? "Active" : "Inactive"}
                           </Badge>
                         </TableCell>
@@ -115,11 +124,12 @@ const Messages = () => {
                             ? new Date(user.last_sign_in_at).toLocaleDateString() 
                             : "Never"}
                         </TableCell>
+                        <TableCell>{user.username || "—"}</TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                         No users found in the database
                       </TableCell>
                     </TableRow>
@@ -131,7 +141,8 @@ const Messages = () => {
           
           {!loading && !error && (
             <div className="mt-4 p-4 bg-gray-50 rounded-md">
-              <p className="text-sm text-gray-500">Total users in database: <strong>{users.length}</strong></p>
+              <p className="text-sm text-gray-500">Total users in profiles table: <strong>{users.length}</strong></p>
+              <p className="text-xs text-gray-400 mt-1">Query executed directly against the 'profiles' table with no filters</p>
             </div>
           )}
         </CardContent>
