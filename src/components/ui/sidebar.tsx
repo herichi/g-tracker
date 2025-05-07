@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import {
   Home,
@@ -6,6 +7,7 @@ import {
   Users,
   Layers,
   UserCog,
+  FileText
 } from "lucide-react"
 import { useLocation } from "react-router-dom";
 
@@ -55,6 +57,11 @@ export function SidebarNav() {
       icon: Layers,
       label: "Panels",
       href: "/panels",
+    },
+    {
+      icon: FileText,
+      label: "Reports",
+      href: "/reports",
     },
     {
       icon: Users,
