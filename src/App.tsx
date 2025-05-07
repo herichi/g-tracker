@@ -20,6 +20,7 @@ import BuildingDetail from "./pages/BuildingDetail";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
 import UserManagementPage from "./pages/UserManagement";
+import Messages from "./pages/Messages"; // Add import for the Messages page
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -114,6 +115,16 @@ const App = () => (
                     <ProtectedRoute>
                       <AppLayout>
                         <UserManagementPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/messages" 
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <Messages />
                       </AppLayout>
                     </ProtectedRoute>
                   } 
