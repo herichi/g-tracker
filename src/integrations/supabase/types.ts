@@ -58,6 +58,7 @@ export type Database = {
           manufactured_date: string
           name: string
           project_id: string
+          qr_code_url: string | null
           serial_number: string
           status: string
           thickness: number
@@ -75,6 +76,7 @@ export type Database = {
           manufactured_date: string
           name: string
           project_id: string
+          qr_code_url?: string | null
           serial_number: string
           status: string
           thickness: number
@@ -92,6 +94,7 @@ export type Database = {
           manufactured_date?: string
           name?: string
           project_id?: string
+          qr_code_url?: string | null
           serial_number?: string
           status?: string
           thickness?: number
@@ -196,6 +199,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_panel_qr_code_url: {
+        Args: { panel_id: string }
+        Returns: string
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
