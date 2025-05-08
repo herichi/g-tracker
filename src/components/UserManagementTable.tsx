@@ -1,14 +1,17 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { User, UserRole } from "@/types/user";
 import UserList from "@/components/user-management/UserList";
-import EditUserDialog, { EditUserFormData } from "@/components/user-management/EditUserDialog";
-import AddUserDialog, { AddUserFormData } from "@/components/user-management/AddUserDialog";
+import EditUserDialog from "@/components/user-management/EditUserDialog";
+import AddUserDialog from "@/components/user-management/AddUserDialog";
 import DeleteUserDialog from "@/components/user-management/DeleteUserDialog";
+import useUsersManagement from "@/hooks/useUsersManagement";
+import useUserActions from "@/hooks/useUserActions";
+import { Table } from "@/components/ui/table";
+import UserTableHeader from "@/components/user-management/UserTableHeader";
+import UserTablePagination from "@/components/user-management/UserTablePagination";
 
 interface UserManagementTableProps {
   filterRole: UserRole | null;
@@ -16,159 +19,41 @@ interface UserManagementTableProps {
 }
 
 const UserManagementTable = ({ filterRole, filterInactive = false }: UserManagementTableProps) => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      console.log(`Fetching users with filters: role=${filterRole}, inactive=${filterInactive}`);
-      
-      // Build query based on filters
-      let query = supabase.from('profiles').select('*');
-      
-      // Apply role filter if specified
-      if (filterRole) {
-        console.log(`Filtering by role: ${filterRole}`);
-        query = query.eq('role', filterRole);
-      }
-      
-      // Apply active status filter if specified
-      if (filterInactive !== undefined) {
-        const activeStatus = !filterInactive;
-        console.log(`Filtering by active status: ${activeStatus}`);
-        query = query.eq('active', activeStatus);
-      }
-      
-      // Execute the query
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      
-      console.log(`Retrieved ${data?.length || 0} users from database`);
-      
-      if (data) {
-        setUsers(data as User[]);
-      } else {
-        setUsers([]);
-      }
-    } catch (error: any) {
-      toast.error(`Error fetching users: ${error.message}`);
-      console.error("Error fetching users:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    users,
+    loading,
+    currentPage,
+    totalPages,
+    sortBy,
+    sortOrder,
+    fetchUsers,
+    handlePageChange,
+    handleSortChange,
+  } = useUsersManagement({ filterRole, filterInactive });
 
-  useEffect(() => {
-    fetchUsers();
-  }, [filterRole, filterInactive]);
+  const {
+    currentUser,
+    editDialogOpen,
+    addDialogOpen,
+    deleteDialogOpen,
+    setEditDialogOpen,
+    setAddDialogOpen,
+    setDeleteDialogOpen,
+    handleEditUser,
+    handleAddUser,
+    handleDeleteUser,
+    saveUserEdit,
+    createUser,
+    confirmDeleteUser,
+  } = useUserActions({ onSuccess: fetchUsers });
 
-  const handleEditUser = (user: User) => {
-    setCurrentUser(user);
-    setEditDialogOpen(true);
-  };
-
-  const handleAddUser = () => {
-    setAddDialogOpen(true);
-  };
-
-  const handleDeleteUser = (user: User) => {
-    setCurrentUser(user);
-    setDeleteDialogOpen(true);
-  };
-
-  const saveUserEdit = async (formData: EditUserFormData) => {
-    if (!currentUser) return;
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: formData.full_name,
-          role: formData.role as UserRole,
-          active: formData.active,
-          Email: formData.email,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', currentUser.id);
-
-      if (error) throw error;
-      
-      toast.success("User updated successfully");
-      fetchUsers();
-      setEditDialogOpen(false);
-    } catch (error: any) {
-      toast.error(`Error updating user: ${error.message}`);
-      console.error("Error updating user:", error);
-    }
-  };
-
-  const createUser = async (formData: AddUserFormData) => {
-    try {
-      // First, create the auth user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formData.email,
-        password: formData.password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: formData.full_name,
-        }
-      });
-
-      if (authError) throw authError;
-      
-      if (authData.user) {
-        // Then update the user's profile with additional data
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            role: formData.role as UserRole,
-            active: formData.active,
-            full_name: formData.full_name,
-            Email: formData.email,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', authData.user.id);
-
-        if (profileError) throw profileError;
-        
-        toast.success("User created successfully");
-        fetchUsers();
-        setAddDialogOpen(false);
-      }
-    } catch (error: any) {
-      toast.error(`Error creating user: ${error.message}`);
-      console.error("Error creating user:", error);
-    }
-  };
-
-  const confirmDeleteUser = async () => {
-    if (!currentUser) return;
-    
-    try {
-      // Soft delete by setting active status to false
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          active: false,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', currentUser.id);
-
-      if (error) throw error;
-      
-      toast.success("User deactivated successfully");
-      fetchUsers();
-      setDeleteDialogOpen(false);
-    } catch (error: any) {
-      toast.error(`Error deactivating user: ${error.message}`);
-      console.error("Error deactivating user:", error);
-    }
+  const toggleUserExpansion = (userId: string) => {
+    setExpandedUsers(prev => ({
+      ...prev,
+      [userId]: !prev[userId]
+    }));
   };
 
   return (
@@ -181,11 +66,28 @@ const UserManagementTable = ({ filterRole, filterInactive = false }: UserManagem
         </Button>
       </div>
       
-      <UserList 
-        users={users} 
-        loading={loading} 
-        onEdit={handleEditUser} 
-        onDelete={handleDeleteUser} 
+      <div className="rounded-md border">
+        <Table>
+          <UserTableHeader 
+            onSortChange={handleSortChange}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+          />
+          <UserList 
+            users={users} 
+            loading={loading} 
+            onEdit={handleEditUser} 
+            onDelete={handleDeleteUser}
+            expandedUsers={expandedUsers}
+            toggleUserExpansion={toggleUserExpansion}
+          />
+        </Table>
+      </div>
+      
+      <UserTablePagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
       />
       
       <EditUserDialog 

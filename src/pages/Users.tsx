@@ -1,7 +1,6 @@
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 
@@ -16,13 +15,10 @@ import UserManagementTable from "@/components/UserManagementTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Users = () => {
   const { userRole, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [error, setError] = useState<string | null>(null);
 
   // Check if user has admin role
   useEffect(() => {
@@ -40,16 +36,6 @@ const Users = () => {
         </div>
         <Skeleton className="h-[500px] w-full" />
       </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert variant="destructive" className="mb-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
     );
   }
 
@@ -78,7 +64,7 @@ const Users = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <UserManagementTable filterRole={null} />
+              <UserManagementTable filterRole={null} filterInactive={false} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -91,7 +77,7 @@ const Users = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <UserManagementTable filterRole="admin" />
+              <UserManagementTable filterRole="admin" filterInactive={false} />
             </CardContent>
           </Card>
         </TabsContent>
