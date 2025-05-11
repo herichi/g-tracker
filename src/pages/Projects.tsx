@@ -19,10 +19,10 @@ const Projects: React.FC = () => {
 
   // Filter projects
   const filteredProjects = projects.filter(project => {
-    // Apply search filter
+    // Apply search filter - ensure ID is converted to string for comparison
     const matchesSearch = 
       project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      String(project.id).toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -33,7 +33,7 @@ const Projects: React.FC = () => {
   });
 
   const handleProjectSelect = (projectId: string) => {
-    const project = projects.find(p => p.id === projectId);
+    const project = projects.find(p => String(p.id) === String(projectId));
     if (project) {
       setSelectedProject(project);
       navigate(`/project/${projectId}`);

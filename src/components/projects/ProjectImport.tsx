@@ -150,6 +150,7 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           return sourceColumn ? row[sourceColumn] : undefined;
         };
         
+        // Important: Get projectId as-is - could be number or UUID string
         const projectId = extractValue('id');
         
         // Skip rows without essential data
@@ -186,7 +187,7 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           }
         }
         
-        // Normalize status - FIX: Ensure status is a valid ProjectStatus
+        // Normalize status - Ensure status is a valid ProjectStatus
         let rawStatus = (extractValue('status') as string || '').toLowerCase();
         let status: ProjectStatus = 'active'; // Default status
         
@@ -195,8 +196,9 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           status = rawStatus as ProjectStatus;
         }
         
-        // Check if project already exists
-        const existingProject = projects.find(p => p.id === projectId);
+        // Check if project already exists - now need to convert both to string for comparison
+        const projectIdStr = projectId ? String(projectId) : '';
+        const existingProject = projects.find(p => String(p.id) === projectIdStr);
         
         const estimated = extractValue('estimated');
         
@@ -228,8 +230,8 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
             
             updated++;
           } else {
-            // Create new project
-            const newId = projectId || uuidv4();
+            // Create new project - preserve numeric ID if it exists, otherwise generate UUID
+            const newId = projectId ? String(projectId) : uuidv4();
             
             await supabase.from('projects').insert({
               id: newId,
