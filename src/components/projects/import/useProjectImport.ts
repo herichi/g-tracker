@@ -179,7 +179,20 @@ export const useProjectImport = (onImportComplete?: () => void) => {
         if (user) {
           if (existingProject) {
             // For updates, use all explicit fields from the import, otherwise use existing values as fallbacks
-            const projectData = {
+            const projectData: {
+              id: string;
+              name: string;
+              location: string;
+              client_name: string;
+              status: ProjectStatus;
+              start_date: string;
+              created_by: string;
+              end_date?: string;
+              description?: string;
+              estimated?: number | null;
+              created_at?: string;
+              updated_at: string;
+            } = {
               id: projectIdStr,
               name: projectName,
               location: location || existingProject.location, 
@@ -187,6 +200,7 @@ export const useProjectImport = (onImportComplete?: () => void) => {
               status: status,
               start_date: startDate,
               created_by: user.id,
+              updated_at: updatedAt || new Date().toISOString()
             };
             
             // Add optional fields only if they have values, either from import or existing project
@@ -205,9 +219,6 @@ export const useProjectImport = (onImportComplete?: () => void) => {
             if (createdAt) {
               projectData.created_at = createdAt;
             }
-            
-            // Always update the updated_at timestamp for updates
-            projectData.updated_at = updatedAt || new Date().toISOString();
             
             // Perform the update
             const { error } = await supabase
@@ -239,7 +250,20 @@ export const useProjectImport = (onImportComplete?: () => void) => {
             const newId = projectId ? String(projectId) : uuidv4();
             
             // For new projects, ensure all required fields are provided
-            const projectData = {
+            const projectData: {
+              id: string;
+              name: string;
+              location: string;
+              client_name: string;
+              status: ProjectStatus;
+              start_date: string;
+              created_by: string;
+              created_at: string;
+              updated_at: string;
+              end_date?: string;
+              description?: string;
+              estimated?: number | null;
+            } = {
               id: newId,
               name: projectName,
               location: location,
