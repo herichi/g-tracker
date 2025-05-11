@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Project, ProjectStatus } from '@/types';
@@ -226,12 +225,22 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           if (updatedAt) finalProjectData.updated_at = updatedAt;
 
           if (existingProject) {
-            // Update existing project
-            await supabase.from('projects').update({
+            // Update existing project - FIXED: Include all required fields
+            const updateData = {
               ...finalProjectData,
+              // Ensure all required fields are present for the update
+              name: projectName,
+              location: location || existingProject.location,
+              client_name: clientName || existingProject.clientName,
+              status: status,
+              start_date: startDate,
               // Always update the updated_at if not explicitly provided
               updated_at: updatedAt || new Date().toISOString(),
-            }).eq('id', existingProject.id);
+              // Keep created_by from existing project if available
+              created_by: user.id
+            };
+            
+            await supabase.from('projects').update(updateData).eq('id', existingProject.id);
             
             updated++;
             console.log(`Updated project: ${projectIdStr}`);
@@ -239,9 +248,16 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
             // Create new project - preserve numeric ID if it exists, otherwise generate UUID
             const newId = projectId ? String(projectId) : uuidv4();
             
+            // FIXED: Ensure all required fields are present for insert
             await supabase.from('projects').insert({
               ...finalProjectData,
               id: newId,
+              // Ensure all required fields have values
+              name: projectName,
+              location: location || '',
+              client_name: clientName || '',
+              status: status,
+              start_date: startDate,
               created_by: user.id, // Use current user ID as creator
               // Set timestamps if not provided
               created_at: createdAt || new Date().toISOString(),
@@ -252,8 +268,8 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
             addProject({
               id: newId,
               name: projectName,
-              location: location,
-              clientName: clientName,
+              location: location || '',
+              clientName: clientName || '',
               status: status,
               startDate: startDate,
               endDate: endDate,
