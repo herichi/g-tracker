@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "@/context/AppContext";
@@ -9,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ProjectStatus } from "@/types";
 import { FileX, Search, Plus } from "lucide-react";
 import AddProjectDialog from "@/components/AddProjectDialog";
+import ProjectImport from "@/components/projects/ProjectImport";
 
 const Projects: React.FC = () => {
   const { projects, panels, setSelectedProject } = useAppContext();
@@ -44,12 +44,15 @@ const Projects: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Projects</h1>
-        <Button 
-          className="bg-construction-blue hover:bg-construction-blue-dark"
-          onClick={() => setIsAddProjectDialogOpen(true)}
-        >
-          <Plus className="mr-2 h-4 w-4" /> New Project
-        </Button>
+        <div className="flex gap-2">
+          <ProjectImport onImportComplete={() => {}} />
+          <Button 
+            className="bg-construction-blue hover:bg-construction-blue-dark"
+            onClick={() => setIsAddProjectDialogOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" /> New Project
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

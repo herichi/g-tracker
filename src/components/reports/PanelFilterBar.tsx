@@ -58,7 +58,7 @@ const PanelFilterBar: React.FC<PanelFilterBarProps> = ({
         <Select 
           value={selectedBuilding} 
           onValueChange={setSelectedBuilding}
-          disabled={!selectedProject || filteredBuildings.length === 0}
+          disabled={!selectedProject || selectedProject === "all-projects" || filteredBuildings.length === 0}
         >
           <SelectTrigger className="w-[200px]">
             <SelectValue placeholder="All Buildings" />

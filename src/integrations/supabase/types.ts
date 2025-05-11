@@ -160,37 +160,46 @@ export type Database = {
           client_name: string
           created_at: string
           created_by: string
+          deleted_at: string | null
           description: string | null
           end_date: string | null
+          estimated: number | null
           id: string
           location: string
           name: string
           start_date: string
           status: string
+          updated_at: string | null
         }
         Insert: {
           client_name: string
           created_at?: string
           created_by: string
+          deleted_at?: string | null
           description?: string | null
           end_date?: string | null
+          estimated?: number | null
           id: string
           location: string
           name: string
           start_date: string
           status: string
+          updated_at?: string | null
         }
         Update: {
           client_name?: string
           created_at?: string
           created_by?: string
+          deleted_at?: string | null
           description?: string | null
           end_date?: string | null
+          estimated?: number | null
           id?: string
           location?: string
           name?: string
           start_date?: string
           status?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
