@@ -1,20 +1,9 @@
 
 import * as XLSX from 'xlsx';
 import { toast } from "@/components/ui/use-toast";
-import { Project, ProjectStatus } from '@/types';
+import { ProjectStatus } from '@/types';
 import { formatDate, formatTimestamp } from '@/lib/utils';
-
-export interface ImportStats {
-  added: number;
-  updated: number;
-  failed: number;
-  skipped: number;
-  total: number;
-}
-
-export interface ColumnMapping {
-  [excelColumn: string]: string;
-}
+import { ImportStats, ColumnMapping } from './types';
 
 export interface PreviewData {
   data: any[];
