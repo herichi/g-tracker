@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { Panel, PanelStatus } from '@/types';
@@ -15,6 +14,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { FileText, Upload } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { formatDate } from '@/lib/utils';
 
 interface PanelExcelImportProps {
   projectId?: string;
@@ -141,7 +141,14 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
           }
         }
         
-        // Create panel object
+        // Format dates properly
+        const manufacturedDate = formatDate(row.ManufacturedDate) || formatDate(new Date());
+        const deliveredDate = formatDate(row.DeliveredDate);
+        const installedDate = formatDate(row.InstalledDate);
+        const inspectedDate = formatDate(row.InspectedDate);
+        const date = formatDate(row.Date);
+        
+        // Create panel object with properly formatted dates
         const panelData: Partial<Panel> = {
           serialNumber: row.SerialNumber,
           name: row.Name || row.SerialNumber,
@@ -151,7 +158,7 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
           buildingId: panelBuildingId,
           dimensions: dimensions,
           weight: parseFloat(row.Weight) || 0,
-          date: row.Date,
+          date: date,
           issueTransmittalNo: row.IssueTransmittalNo,
           dwgNo: row.DwgNo,
           description: row.Description,
@@ -164,10 +171,10 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
           checkedBy: row.CheckedBy,
           notes: row.Notes,
           location: row.Location,
-          manufacturedDate: row.ManufacturedDate || new Date().toISOString(),
-          deliveredDate: row.DeliveredDate,
-          installedDate: row.InstalledDate,
-          inspectedDate: row.InspectedDate,
+          manufacturedDate: manufacturedDate,
+          deliveredDate: deliveredDate,
+          installedDate: installedDate,
+          inspectedDate: inspectedDate,
         };
 
         // Update existing panel or add new one

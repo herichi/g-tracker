@@ -24,6 +24,7 @@ import { toast } from '@/components/ui/use-toast';
 import { FileSpreadsheet, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { formatDate } from '@/lib/utils';
 
 interface ProjectImportProps {
   onImportComplete?: () => void;
@@ -159,33 +160,9 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           return;
         }
         
-        // Format dates correctly
-        let startDate = extractValue('startDate');
-        let endDate = extractValue('endDate');
-        
-        if (startDate) {
-          if (typeof startDate === 'number') { 
-            // Excel serial date number
-            startDate = new Date(Math.round((startDate - 25569) * 86400 * 1000)).toISOString().split('T')[0];
-          } else if (typeof startDate === 'string') {
-            // Try to normalize date string
-            const date = new Date(startDate);
-            if (!isNaN(date.getTime())) {
-              startDate = date.toISOString().split('T')[0];
-            }
-          }
-        }
-        
-        if (endDate) {
-          if (typeof endDate === 'number') {
-            endDate = new Date(Math.round((endDate - 25569) * 86400 * 1000)).toISOString().split('T')[0];
-          } else if (typeof endDate === 'string') {
-            const date = new Date(endDate);
-            if (!isNaN(date.getTime())) {
-              endDate = date.toISOString().split('T')[0];
-            }
-          }
-        }
+        // Format dates correctly using our new utility function
+        let startDate = formatDate(extractValue('startDate'));
+        let endDate = formatDate(extractValue('endDate'));
         
         // Normalize status - Ensure status is a valid ProjectStatus
         let rawStatus = (extractValue('status') as string || '').toLowerCase();
@@ -208,8 +185,8 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           location: extractValue('location') as string || 'Unknown',
           clientName: extractValue('clientName') as string || 'Unknown',
           status: status,
-          startDate: startDate as string || new Date().toISOString().split('T')[0],
-          endDate: endDate as string,
+          startDate: startDate || new Date().toISOString().split('T')[0],
+          endDate: endDate,
           description: extractValue('description') as string,
         };
 
