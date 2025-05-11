@@ -14,7 +14,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { FileText, Upload } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatTimestamp } from '@/lib/utils';
 
 interface PanelExcelImportProps {
   projectId?: string;
@@ -81,8 +81,8 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
 
     data.forEach((row) => {
       try {
-        // Validate essential fields
-        if (!row.SerialNumber || !row.Type) {
+        // Only validate essential field: serial number (primary identifier for panels)
+        if (!row.SerialNumber) {
           failed++;
           return;
         }
@@ -90,24 +90,24 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
         // Find if the panel already exists by serial number
         const existingPanel = panels.find(p => p.serialNumber === row.SerialNumber);
         
-        // Prepare dimension object
+        // Prepare dimension object with default values if missing
         const dimensions = {
           width: parseFloat(row.Width) || 0,
           height: parseFloat(row.Height) || 0,
           thickness: parseFloat(row.Thickness) || 0
         };
 
-        // Handle IFP QTY fields
-        const ifpQtyNos = row.IFPQtyNos ? parseFloat(row.IFPQtyNos) : undefined;
-        const ifpQtyMeasurement = row.IFPQtyMeasurement ? parseFloat(row.IFPQtyMeasurement) : undefined;
+        // Handle optional fields - allow null/undefined values
+        const ifpQtyNos = row.IFPQtyNos !== undefined ? parseFloat(row.IFPQtyNos) : null;
+        const ifpQtyMeasurement = row.IFPQtyMeasurement !== undefined ? parseFloat(row.IFPQtyMeasurement) : null;
         
         // Handle unit quantity
-        const unitQty = row.UnitQty ? parseFloat(row.UnitQty) : undefined;
+        const unitQty = row.UnitQty !== undefined ? parseFloat(row.UnitQty) : null;
         const unitQtyType = row.UnitQtyType === 'sqm' || row.UnitQtyType === 'lm' 
           ? row.UnitQtyType 
-          : undefined;
+          : null;
 
-        // Validate project
+        // Validate project - keep null values if not provided
         let panelProjectId = projectId;
         if (!panelProjectId && row.ProjectName) {
           const project = projects.find(p => p.name === row.ProjectName);
@@ -116,7 +116,7 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
           }
         }
 
-        // Validate building
+        // Validate building - keep null values if not provided
         let panelBuildingId = buildingId;
         if (!panelBuildingId && row.BuildingName && panelProjectId) {
           const building = buildings.find(b => b.name === row.BuildingName && b.projectId === panelProjectId);
@@ -125,7 +125,7 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
           }
         }
 
-        // Validate status
+        // Validate status - use default if not valid
         let status: PanelStatus = 'manufactured';
         if (row.Status && typeof row.Status === 'string') {
           const normalizedStatus = row.Status.toLowerCase().replace(/\s/g, '_');
@@ -141,36 +141,40 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
           }
         }
         
-        // Format dates properly
+        // Format dates - accept null values for optional dates
         const manufacturedDate = formatDate(row.ManufacturedDate) || formatDate(new Date());
         const deliveredDate = formatDate(row.DeliveredDate);
         const installedDate = formatDate(row.InstalledDate);
         const inspectedDate = formatDate(row.InspectedDate);
         const date = formatDate(row.Date);
         
+        // Import dates for created_at and updated_at if available
+        const createdAt = formatTimestamp(row.CreatedAt);
+        const updatedAt = formatTimestamp(row.UpdatedAt);
+        
         // Create panel object with properly formatted dates
         const panelData: Partial<Panel> = {
           serialNumber: row.SerialNumber,
           name: row.Name || row.SerialNumber,
-          type: row.Type,
+          type: row.Type || 'Standard',
           status: status,
           projectId: panelProjectId || '',
           buildingId: panelBuildingId,
           dimensions: dimensions,
-          weight: parseFloat(row.Weight) || 0,
+          weight: row.Weight !== undefined ? parseFloat(row.Weight) || 0 : 0,
           date: date,
-          issueTransmittalNo: row.IssueTransmittalNo,
-          dwgNo: row.DwgNo,
-          description: row.Description,
-          panelTag: row.PanelTag,
+          issueTransmittalNo: row.IssueTransmittalNo || null,
+          dwgNo: row.DwgNo || null,
+          description: row.Description || null,
+          panelTag: row.PanelTag || null,
           unitQty: unitQty,
           unitQtyType: unitQtyType,
           ifpQtyNos: ifpQtyNos,
           ifpQtyMeasurement: ifpQtyMeasurement,
-          draftman: row.Draftman,
-          checkedBy: row.CheckedBy,
-          notes: row.Notes,
-          location: row.Location,
+          draftman: row.Draftman || null,
+          checkedBy: row.CheckedBy || null,
+          notes: row.Notes || null,
+          location: row.Location || null,
           manufacturedDate: manufacturedDate,
           deliveredDate: deliveredDate,
           installedDate: installedDate,
@@ -194,10 +198,10 @@ const PanelExcelImport: React.FC<PanelExcelImportProps> = ({
             id: uuidv4(),
             projectId: panelProjectId || '',
             serialNumber: row.SerialNumber,
-            type: row.Type,
+            type: row.Type || 'Standard',
             status: panelData.status || 'manufactured',
             dimensions: dimensions,
-            weight: parseFloat(row.Weight) || 0,
+            weight: row.Weight !== undefined ? parseFloat(row.Weight) || 0 : 0,
             manufacturedDate: panelData.manufacturedDate || new Date().toISOString()
           } as Panel);
           added++;

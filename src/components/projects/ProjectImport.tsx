@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Project, ProjectStatus } from '@/types';
@@ -152,15 +151,16 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           return sourceColumn ? row[sourceColumn] : undefined;
         };
         
-        // Important: Get projectId as-is - could be number or UUID string
+        // Important: Get projectId - mandatory field
         const projectId = extractValue('id');
         
-        // Skip rows without essential data
-        if (!extractValue('name')) {
+        // Skip rows without essential ID data
+        if (!projectId) {
           skipped++;
+          console.log("Skipping row without ID:", row);
           return;
         }
-        
+
         // Format dates correctly using our utility functions
         let startDate = formatDate(extractValue('startDate'));
         let endDate = formatDate(extractValue('endDate'));
@@ -172,26 +172,25 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
         // Use imported creator name (if available)
         let createdBy = extractValue('createdBy') as string;
         
-        // Normalize status - Ensure status is a valid ProjectStatus
+        // Normalize status - Set default if not provided
         let rawStatus = (extractValue('status') as string || '').toLowerCase();
         let status: ProjectStatus = 'active'; // Default status
         
-        // Only assign if it's a valid ProjectStatus
         if (rawStatus === 'active' || rawStatus === 'completed' || rawStatus === 'on-hold') {
           status = rawStatus as ProjectStatus;
         }
         
-        // Check if project already exists - need to convert both to string for comparison
+        // Check if project already exists
         const projectIdStr = projectId ? String(projectId) : '';
         const existingProject = projects.find(p => String(p.id) === projectIdStr);
         
         const estimated = extractValue('estimated');
         
-        // Create project object
+        // Create project object with default values for nullable fields
         const projectData: Partial<Project> = {
-          name: extractValue('name') as string,
-          location: extractValue('location') as string || 'Unknown',
-          clientName: extractValue('clientName') as string || 'Unknown',
+          name: extractValue('name') as string || 'Untitled Project',
+          location: extractValue('location') as string || '',
+          clientName: extractValue('clientName') as string || '',
           status: status,
           startDate: startDate || new Date().toISOString().split('T')[0],
           endDate: endDate,
@@ -209,7 +208,7 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
               start_date: projectData.startDate,
               end_date: projectData.endDate,
               description: projectData.description,
-              estimated: Number(estimated) || null,
+              estimated: estimated !== undefined ? Number(estimated) || null : null,
               updated_at: updatedAt || new Date().toISOString(),
             }).eq('id', existingProject.id);
             
@@ -227,12 +226,10 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
               start_date: projectData.startDate,
               end_date: projectData.endDate,
               description: projectData.description,
-              // Use the imported creator name if available, otherwise use current user ID
               created_by: createdBy || user.id,
-              // Use the imported created_at date if available
               created_at: createdAt || new Date().toISOString(),
               updated_at: updatedAt || new Date().toISOString(),
-              estimated: Number(estimated) || null,
+              estimated: estimated !== undefined ? Number(estimated) || null : null,
             });
             
             // Add to local state as well
@@ -272,7 +269,7 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
     } else {
       toast({
         title: "Import Successful",
-        description: `Added ${added} projects, updated ${updated} projects.`,
+        description: `Added ${added} projects, updated ${updated} projects. Skipped ${skipped} rows without ID.`,
       });
     }
     
