@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Project, ProjectStatus } from '@/types';
@@ -45,7 +46,7 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
   const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [importStats, setImportStats] = useState<ImportStats | null>(null);
-  const { addProject, projects } = useAppContext();
+  const { addProject, projects, updateProject } = useAppContext();
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -200,47 +201,54 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
         const existingProject = projects.find(p => String(p.id) === projectIdStr);
         
         if (user) {
-          const projectData = {
+          // Build the project data object with all fields that have values
+          const projectData: Record<string, any> = {
             name: projectName,
             location: location,
             client_name: clientName,
             status: status,
-            start_date: startDate,
-            end_date: endDate,
-            description: description,
-            estimated: estimated,
+            start_date: startDate
           };
-
-          // Add non-null values to the data object
-          const finalProjectData: Record<string, any> = {};
-          Object.entries(projectData).forEach(([key, value]) => {
-            // Only include non-undefined values (allow null)
-            if (value !== undefined) {
-              finalProjectData[key] = value;
-            }
-          });
           
-          // Add timestamps if provided
-          if (createdAt) finalProjectData.created_at = createdAt;
-          if (updatedAt) finalProjectData.updated_at = updatedAt;
-
+          // Add optional fields only if they have values
+          if (endDate) projectData.end_date = endDate;
+          if (description !== undefined) projectData.description = description;
+          if (estimated !== undefined) projectData.estimated = estimated;
+          if (createdAt) projectData.created_at = createdAt;
+          if (updatedAt) projectData.updated_at = updatedAt;
+          
           if (existingProject) {
-            // Update existing project - FIXED: Include all required fields
-            const updateData = {
-              ...finalProjectData,
-              // Ensure all required fields are present for the update
-              name: projectName,
-              location: location || existingProject.location,
-              client_name: clientName || existingProject.clientName,
-              status: status,
-              start_date: startDate,
-              // Always update the updated_at if not explicitly provided
-              updated_at: updatedAt || new Date().toISOString(),
-              // Keep created_by from existing project if available
-              created_by: user.id
-            };
+            // Update existing project with new data
+            console.log(`Updating project ${projectIdStr} with data:`, projectData);
             
-            await supabase.from('projects').update(updateData).eq('id', existingProject.id);
+            // Always include the updated_at if not provided
+            if (!projectData.updated_at) {
+              projectData.updated_at = new Date().toISOString();
+            }
+            
+            // Perform the update
+            const { error } = await supabase
+              .from('projects')
+              .update(projectData)
+              .eq('id', projectIdStr);
+            
+            if (error) {
+              console.error("Error updating project:", error);
+              failed++;
+              return;
+            }
+            
+            // Update local state as well to reflect changes
+            updateProject({
+              ...existingProject,
+              name: projectName,
+              location: location, 
+              clientName: clientName,
+              status: status,
+              startDate: startDate,
+              endDate: endDate,
+              description: description
+            });
             
             updated++;
             console.log(`Updated project: ${projectIdStr}`);
@@ -248,21 +256,30 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
             // Create new project - preserve numeric ID if it exists, otherwise generate UUID
             const newId = projectId ? String(projectId) : uuidv4();
             
-            // FIXED: Ensure all required fields are present for insert
-            await supabase.from('projects').insert({
-              ...finalProjectData,
-              id: newId,
-              // Ensure all required fields have values
-              name: projectName,
-              location: location || '',
-              client_name: clientName || '',
-              status: status,
-              start_date: startDate,
-              created_by: user.id, // Use current user ID as creator
-              // Set timestamps if not provided
-              created_at: createdAt || new Date().toISOString(),
-              updated_at: updatedAt || new Date().toISOString(),
-            });
+            // Add required fields for new project
+            projectData.id = newId;
+            projectData.created_by = user.id;
+            
+            // Set default timestamps if not provided
+            if (!projectData.created_at) {
+              projectData.created_at = new Date().toISOString();
+            }
+            if (!projectData.updated_at) {
+              projectData.updated_at = new Date().toISOString();
+            }
+            
+            console.log(`Creating new project with ID ${newId} and data:`, projectData);
+            
+            // Perform the insert
+            const { error } = await supabase
+              .from('projects')
+              .insert(projectData);
+            
+            if (error) {
+              console.error("Error creating project:", error);
+              failed++;
+              return;
+            }
             
             // Add to local state as well
             addProject({
