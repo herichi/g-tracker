@@ -46,8 +46,8 @@ export async function processProjectsData(
       
       // Skip rows without essential ID data
       if (!projectId) {
-        skipped++;
         console.log("Skipping row without ID:", row);
+        skipped++;
         return;
       }
 
@@ -79,142 +79,151 @@ export async function processProjectsData(
       const rawStatus = extractValueFromRow(row, 'status', columnMappings) as string;
       const status = normalizeStatus(rawStatus);
 
-      // Check if project already exists
-      const projectIdStr = projectId ? String(projectId) : '';
-      const existingProject = projects.find(p => String(p.id) === projectIdStr);
+      // Check if project already exists - convert IDs to strings for reliable comparison
+      const projectIdStr = String(projectId).trim();
+      const existingProject = projects.find(p => String(p.id).trim() === projectIdStr);
       
-      if (userId) {
-        if (existingProject) {
-          // Check if there are any changes to the project data
-          const hasChanges = 
-            projectName !== existingProject.name ||
-            location !== existingProject.location ||
-            clientName !== existingProject.clientName ||
-            status !== existingProject.status ||
-            startDate !== existingProject.startDate ||
-            endDate !== existingProject.endDate ||
-            description !== existingProject.description;
-          
-          // Skip if no changes
-          if (!hasChanges) {
-            console.log("No changes detected for project:", projectIdStr);
-            skipped++;
-            return;
-          }
-          
-          // For updates, use all explicit fields from the import, otherwise use existing values as fallbacks
-          const projectData: ProjectImportData = {
-            id: projectIdStr,
-            name: projectName,
-            location: location || existingProject.location, 
-            client_name: clientName || existingProject.clientName,
-            status: status,
-            start_date: startDate,
-            created_by: userId,
-            updated_at: updatedAt || new Date().toISOString()
-          };
-          
-          // Add optional fields only if they have values, either from import or existing project
-          if (endDate || existingProject.endDate) {
-            projectData.end_date = endDate || existingProject.endDate;
-          }
-          
-          if (description !== undefined) {
-            projectData.description = description;
-          }
-          
-          if (estimated !== undefined && estimated !== null) {
-            projectData.estimated = estimated;
-          }
-          
-          if (createdAt) {
-            projectData.created_at = createdAt;
-          }
-          
-          // Perform the update
-          const { error } = await supabase
-            .from('projects')
-            .update(projectData)
-            .eq('id', projectIdStr);
-          
-          if (error) {
-            console.error("Error updating project:", error);
-            failed++;
-            return;
-          }
-          
-          // Update local state as well to reflect changes
-          updateProject({
-            ...existingProject,
-            name: projectName,
-            location: location || existingProject.location, 
-            clientName: clientName || existingProject.clientName,
-            status: status,
-            startDate: startDate,
-            endDate: endDate || existingProject.endDate,
-            description: description !== undefined ? description : existingProject.description,
-          });
-          
-          updated++;
-        } else {
-          // Create new project - preserve ID if it exists, otherwise generate UUID
-          const newId = projectId ? String(projectId) : uuidv4();
-          
-          // For new projects, ensure all required fields are provided
-          const projectData: ProjectImportData = {
-            id: newId,
-            name: projectName,
-            location: location,
-            client_name: clientName,
-            status: status,
-            start_date: startDate,
-            created_by: userId,
-            created_at: createdAt || new Date().toISOString(),
-            updated_at: updatedAt || new Date().toISOString()
-          };
-          
-          // Add optional fields only if they have values
-          if (endDate) {
-            projectData.end_date = endDate;
-          }
-          
-          if (description !== undefined) {
-            projectData.description = description;
-          }
-          
-          if (estimated !== undefined && estimated !== null) {
-            projectData.estimated = estimated;
-          }
-          
-          // Perform the insert
-          const { error } = await supabase
-            .from('projects')
-            .insert(projectData);
-          
-          if (error) {
-            console.error("Error creating project:", error);
-            failed++;
-            return;
-          }
-          
-          // Add to local state as well
-          addProject({
-            id: newId,
-            name: projectName,
-            location: location || '',
-            clientName: clientName || '',
-            status: status,
-            startDate: startDate,
-            endDate: endDate,
-            description: description,
-            panelCount: 0,
-          });
-          
-          added++;
-        }
-      } else {
-        failed++;
+      if (!userId) {
         console.error("User is not logged in, cannot import projects");
+        failed++;
+        return;
+      }
+
+      if (existingProject) {
+        // Check if there are any actual changes to the project data
+        const hasChanges = 
+          projectName !== existingProject.name ||
+          location !== existingProject.location ||
+          clientName !== existingProject.clientName ||
+          status !== existingProject.status ||
+          startDate !== existingProject.startDate ||
+          (endDate !== existingProject.endDate && (endDate || existingProject.endDate)) || // Handle case where one is undefined
+          (description !== existingProject.description && (description !== undefined || existingProject.description !== undefined));
+        
+        // Skip if no changes
+        if (!hasChanges) {
+          console.log("No changes detected for project:", projectIdStr);
+          skipped++;
+          return;
+        }
+        
+        // For updates, prepare the update data
+        const projectData: ProjectImportData = {
+          id: projectIdStr,
+          name: projectName,
+          location: location || existingProject.location, 
+          client_name: clientName || existingProject.clientName,
+          status: status,
+          start_date: startDate,
+          created_by: userId,
+          updated_at: new Date().toISOString() // Always use current timestamp for updates
+        };
+        
+        // Add optional fields only if they have values, either from import or existing project
+        if (endDate || existingProject.endDate) {
+          projectData.end_date = endDate || existingProject.endDate;
+        }
+        
+        if (description !== undefined) {
+          projectData.description = description;
+        }
+        
+        if (estimated !== undefined && estimated !== null) {
+          projectData.estimated = estimated;
+        }
+        
+        if (createdAt) {
+          projectData.created_at = createdAt;
+        }
+        
+        console.log("Updating project:", projectIdStr, projectData);
+        
+        // Perform the update
+        const { error } = await supabase
+          .from('projects')
+          .update(projectData)
+          .eq('id', projectIdStr);
+        
+        if (error) {
+          console.error("Error updating project:", error);
+          failed++;
+          return;
+        }
+        
+        // Update local state as well to reflect changes
+        const updatedProjectData = {
+          ...existingProject,
+          name: projectName,
+          location: location || existingProject.location, 
+          clientName: clientName || existingProject.clientName,
+          status: status,
+          startDate: startDate,
+          endDate: endDate || existingProject.endDate,
+          description: description !== undefined ? description : existingProject.description,
+        };
+        
+        updateProject(updatedProjectData);
+        console.log("Project updated successfully:", updatedProjectData);
+        updated++;
+      } else {
+        // Create new project - preserve ID if it exists, otherwise generate UUID
+        const newId = projectIdStr || uuidv4();
+        
+        // For new projects, prepare the insert data
+        const projectData: ProjectImportData = {
+          id: newId,
+          name: projectName,
+          location: location,
+          client_name: clientName,
+          status: status,
+          start_date: startDate,
+          created_by: userId,
+          created_at: createdAt || new Date().toISOString(),
+          updated_at: updatedAt || new Date().toISOString()
+        };
+        
+        // Add optional fields only if they have values
+        if (endDate) {
+          projectData.end_date = endDate;
+        }
+        
+        if (description !== undefined) {
+          projectData.description = description;
+        }
+        
+        if (estimated !== undefined && estimated !== null) {
+          projectData.estimated = estimated;
+        }
+        
+        console.log("Creating new project:", newId, projectData);
+        
+        // Perform the insert
+        const { error } = await supabase
+          .from('projects')
+          .insert(projectData);
+        
+        if (error) {
+          console.error("Error creating project:", error, projectData);
+          failed++;
+          return;
+        }
+        
+        // Add to local state as well
+        const newProject: Project = {
+          id: newId,
+          name: projectName,
+          location: location || '',
+          clientName: clientName || '',
+          status: status,
+          startDate: startDate,
+          endDate: endDate,
+          description: description,
+          panelCount: 0,
+        };
+        
+        addProject(newProject);
+        console.log("Project added successfully:", newProject);
+        added++;
       }
     } catch (error) {
       console.error("Error processing project:", error, row);
@@ -222,24 +231,21 @@ export async function processProjectsData(
     }
   });
   
+  // Wait for all operations to complete
   await Promise.all(batchPromises);
   
   // Show import results
-  showImportResultToast({
-    added,
-    updated,
-    failed,
-    skipped,
-    total: data.length
-  });
-  
-  return {
+  const importStats = {
     added,
     updated,
     failed,
     skipped,
     total: data.length
   };
+  
+  showImportResultToast(importStats);
+  
+  return importStats;
 }
 
 export const handleFileSelected = (
