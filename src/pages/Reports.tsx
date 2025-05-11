@@ -17,13 +17,13 @@ import useReportFunctions from "@/hooks/useReportFunctions";
 
 const Reports: React.FC = () => {
   const { projects, buildings, panels } = useAppContext();
-  const [selectedProject, setSelectedProject] = useState<string>("");
-  const [selectedBuilding, setSelectedBuilding] = useState<string>("");
+  const [selectedProject, setSelectedProject] = useState<string>("all-projects");
+  const [selectedBuilding, setSelectedBuilding] = useState<string>("all-buildings");
   const [loading, setLoading] = useState<boolean>(false);
   const [panelsWithQR, setPanelsWithQR] = useState<Panel[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   
-  const filteredBuildings = selectedProject 
+  const filteredBuildings = selectedProject && selectedProject !== "all-projects"
     ? buildings.filter(b => b.projectId === selectedProject)
     : [];
     
@@ -81,8 +81,8 @@ const Reports: React.FC = () => {
   }, []);
   
   const filteredPanels = panelsWithQR.filter(panel => {
-    const matchesProject = selectedProject ? panel.projectId === selectedProject : true;
-    const matchesBuilding = selectedBuilding ? panel.buildingId === selectedBuilding : true;
+    const matchesProject = !selectedProject || selectedProject === "all-projects" ? true : panel.projectId === selectedProject;
+    const matchesBuilding = !selectedBuilding || selectedBuilding === "all-buildings" ? true : panel.buildingId === selectedBuilding;
     const matchesSearch = searchTerm 
       ? panel.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
         panel.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

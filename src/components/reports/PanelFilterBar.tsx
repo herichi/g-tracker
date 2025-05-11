@@ -46,7 +46,7 @@ const PanelFilterBar: React.FC<PanelFilterBarProps> = ({
             <SelectValue placeholder="All Projects" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Projects</SelectItem>
+            <SelectItem value="all-projects">All Projects</SelectItem>
             {projects.map(project => (
               <SelectItem key={project.id} value={project.id}>
                 {project.name}
@@ -64,7 +64,7 @@ const PanelFilterBar: React.FC<PanelFilterBarProps> = ({
             <SelectValue placeholder="All Buildings" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Buildings</SelectItem>
+            <SelectItem value="all-buildings">All Buildings</SelectItem>
             {filteredBuildings.map(building => (
               <SelectItem key={building.id} value={building.id}>
                 {building.name}
