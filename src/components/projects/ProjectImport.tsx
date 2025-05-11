@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Project, ProjectStatus } from '@/types';
@@ -24,7 +25,7 @@ import { toast } from '@/components/ui/use-toast';
 import { FileSpreadsheet, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatTimestamp } from '@/lib/utils';
 
 interface ProjectImportProps {
   onImportComplete?: () => void;
@@ -160,9 +161,16 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           return;
         }
         
-        // Format dates correctly using our new utility function
+        // Format dates correctly using our utility functions
         let startDate = formatDate(extractValue('startDate'));
         let endDate = formatDate(extractValue('endDate'));
+        
+        // Use imported dates for created_at and updated_at (if available)
+        let createdAt = formatTimestamp(extractValue('createdAt')) || undefined;
+        let updatedAt = formatTimestamp(extractValue('updatedAt')) || undefined;
+        
+        // Use imported creator name (if available)
+        let createdBy = extractValue('createdBy') as string;
         
         // Normalize status - Ensure status is a valid ProjectStatus
         let rawStatus = (extractValue('status') as string || '').toLowerCase();
@@ -173,7 +181,7 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           status = rawStatus as ProjectStatus;
         }
         
-        // Check if project already exists - now need to convert both to string for comparison
+        // Check if project already exists - need to convert both to string for comparison
         const projectIdStr = projectId ? String(projectId) : '';
         const existingProject = projects.find(p => String(p.id) === projectIdStr);
         
@@ -202,7 +210,7 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
               end_date: projectData.endDate,
               description: projectData.description,
               estimated: Number(estimated) || null,
-              updated_at: new Date().toISOString(),
+              updated_at: updatedAt || new Date().toISOString(),
             }).eq('id', existingProject.id);
             
             updated++;
@@ -219,7 +227,11 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
               start_date: projectData.startDate,
               end_date: projectData.endDate,
               description: projectData.description,
-              created_by: user.id,
+              // Use the imported creator name if available, otherwise use current user ID
+              created_by: createdBy || user.id,
+              // Use the imported created_at date if available
+              created_at: createdAt || new Date().toISOString(),
+              updated_at: updatedAt || new Date().toISOString(),
               estimated: Number(estimated) || null,
             });
             

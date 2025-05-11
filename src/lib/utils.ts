@@ -64,3 +64,17 @@ export function formatDate(dateValue: any): string | undefined {
     return undefined;
   }
 }
+
+/**
+ * Formats a date value into a timestamp with time zone string (YYYY-MM-DDThh:mm:ssZ)
+ * Used for created_at and updated_at fields in database
+ * @param dateValue - The date value to format
+ * @returns Formatted timestamp string or undefined if invalid
+ */
+export function formatTimestamp(dateValue: any): string | undefined {
+  const dateString = formatDate(dateValue);
+  if (!dateString) return undefined;
+  
+  // Create a timestamp at noon (to avoid timezone issues)
+  return `${dateString}T12:00:00.000Z`;
+}
