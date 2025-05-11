@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ImportStats } from './projectImportUtils';
+import { ImportStats } from './types';
 
 interface ImportResultsProps {
   stats: ImportStats;

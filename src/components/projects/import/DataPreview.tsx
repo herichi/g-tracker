@@ -9,7 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ColumnMapping } from './projectImportUtils';
+import { ColumnMapping } from './types';
 
 interface DataPreviewProps {
   previewData: any[];
