@@ -178,6 +178,23 @@ export const useProjectImport = (onImportComplete?: () => void) => {
         
         if (user) {
           if (existingProject) {
+            // Check if there are any changes to the project data
+            const hasChanges = 
+              projectName !== existingProject.name ||
+              location !== existingProject.location ||
+              clientName !== existingProject.clientName ||
+              status !== existingProject.status ||
+              startDate !== existingProject.startDate ||
+              endDate !== existingProject.endDate ||
+              description !== existingProject.description;
+            
+            // Skip if no changes
+            if (!hasChanges) {
+              console.log("No changes detected for project:", projectIdStr);
+              skipped++;
+              return;
+            }
+            
             // For updates, use all explicit fields from the import, otherwise use existing values as fallbacks
             const projectData: {
               id: string;
