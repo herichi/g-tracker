@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Project, ProjectStatus } from '@/types';
@@ -67,28 +68,30 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
         if (jsonData.length > 0) {
           setPreview(jsonData.slice(0, 5)); // Show first 5 rows as preview
           
-          // Auto-map columns based on names
+          // Auto-map columns based on names - prioritize specific columns we're looking for
           const firstRow = jsonData[0];
           const keys = Object.keys(firstRow);
           const autoMappings: Record<string, string> = {};
           
           keys.forEach(key => {
             const lowerKey = key.toLowerCase();
-            if (lowerKey === 'id' || lowerKey.includes('id')) autoMappings[key] = 'id';
-            else if (lowerKey === 'name' || lowerKey.includes('name')) autoMappings[key] = 'name';
-            else if (lowerKey === 'location' || lowerKey.includes('location')) autoMappings[key] = 'location';
-            else if (lowerKey === 'status' || lowerKey.includes('status')) autoMappings[key] = 'status';
+            if (lowerKey === 'id') autoMappings[key] = 'id';
+            else if (lowerKey === 'name') autoMappings[key] = 'name';
+            else if (lowerKey === 'estimated') autoMappings[key] = 'estimated';
+            else if (lowerKey.includes('created_at') || lowerKey === 'createdat') autoMappings[key] = 'createdAt';
+            else if (lowerKey.includes('updated_at') || lowerKey === 'updatedat') autoMappings[key] = 'updatedAt';
+            else if (lowerKey.includes('location')) autoMappings[key] = 'location';
+            else if (lowerKey.includes('status')) autoMappings[key] = 'status';
             else if (lowerKey.includes('client')) autoMappings[key] = 'clientName';
             else if (lowerKey.includes('start')) autoMappings[key] = 'startDate';
             else if (lowerKey.includes('end')) autoMappings[key] = 'endDate';
-            else if (lowerKey.includes('estimated')) autoMappings[key] = 'estimated';
             else if (lowerKey.includes('description') || lowerKey.includes('desc')) autoMappings[key] = 'description';
           });
           
           setColumnMappings(autoMappings);
         }
       } catch (error) {
-        console.error("Error reading Excel file:", error);
+        console.error("Error reading Excel/CSV file:", error);
         toast({
           title: "Error",
           description: "Could not parse the file. Is it a valid Excel/CSV file?",
@@ -161,16 +164,29 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           return;
         }
 
-        // Format dates correctly using our utility functions
-        let startDate = formatDate(extractValue('startDate'));
-        let endDate = formatDate(extractValue('endDate'));
+        // Get project name - use fallback if missing
+        const projectName = extractValue('name') || 'Untitled Project';
         
-        // Use imported dates for created_at and updated_at (if available)
-        let createdAt = formatTimestamp(extractValue('createdAt')) || undefined;
-        let updatedAt = formatTimestamp(extractValue('updatedAt')) || undefined;
+        // Format dates correctly using our utility functions - allow null values
+        const createdAt = formatTimestamp(extractValue('createdAt'));
+        const updatedAt = formatTimestamp(extractValue('updatedAt'));
         
-        // Use imported creator name (if available)
-        let createdBy = extractValue('createdBy') as string;
+        // Handle estimated value - allow null
+        const estimatedValue = extractValue('estimated');
+        const estimated = estimatedValue !== undefined ? (Number(estimatedValue) || null) : null;
+        
+        // Get location or use empty string as fallback
+        const location = extractValue('location') || '';
+        
+        // Get client name or use empty string as fallback
+        const clientName = extractValue('clientName') || '';
+        
+        // Get/format dates - use fallbacks if missing
+        const startDate = formatDate(extractValue('startDate')) || new Date().toISOString().split('T')[0];
+        const endDate = formatDate(extractValue('endDate'));
+        
+        // Get description - allow null
+        const description = extractValue('description');
         
         // Normalize status - Set default if not provided
         let rawStatus = (extractValue('status') as string || '').toLowerCase();
@@ -179,73 +195,74 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
         if (rawStatus === 'active' || rawStatus === 'completed' || rawStatus === 'on-hold') {
           status = rawStatus as ProjectStatus;
         }
-        
+
         // Check if project already exists
         const projectIdStr = projectId ? String(projectId) : '';
         const existingProject = projects.find(p => String(p.id) === projectIdStr);
         
-        const estimated = extractValue('estimated');
-        
-        // Create project object with default values for nullable fields
-        const projectData: Partial<Project> = {
-          name: extractValue('name') as string || 'Untitled Project',
-          location: extractValue('location') as string || '',
-          clientName: extractValue('clientName') as string || '',
-          status: status,
-          startDate: startDate || new Date().toISOString().split('T')[0],
-          endDate: endDate,
-          description: extractValue('description') as string,
-        };
-
         if (user) {
+          const projectData = {
+            name: projectName,
+            location: location,
+            client_name: clientName,
+            status: status,
+            start_date: startDate,
+            end_date: endDate,
+            description: description,
+            estimated: estimated,
+          };
+
+          // Add non-null values to the data object
+          const finalProjectData: Record<string, any> = {};
+          Object.entries(projectData).forEach(([key, value]) => {
+            // Only include non-undefined values (allow null)
+            if (value !== undefined) {
+              finalProjectData[key] = value;
+            }
+          });
+          
+          // Add timestamps if provided
+          if (createdAt) finalProjectData.created_at = createdAt;
+          if (updatedAt) finalProjectData.updated_at = updatedAt;
+
           if (existingProject) {
             // Update existing project
             await supabase.from('projects').update({
-              name: projectData.name,
-              location: projectData.location,
-              client_name: projectData.clientName,
-              status: projectData.status,
-              start_date: projectData.startDate,
-              end_date: projectData.endDate,
-              description: projectData.description,
-              estimated: estimated !== undefined ? Number(estimated) || null : null,
+              ...finalProjectData,
+              // Always update the updated_at if not explicitly provided
               updated_at: updatedAt || new Date().toISOString(),
             }).eq('id', existingProject.id);
             
             updated++;
+            console.log(`Updated project: ${projectIdStr}`);
           } else {
             // Create new project - preserve numeric ID if it exists, otherwise generate UUID
             const newId = projectId ? String(projectId) : uuidv4();
             
             await supabase.from('projects').insert({
+              ...finalProjectData,
               id: newId,
-              name: projectData.name,
-              location: projectData.location,
-              client_name: projectData.clientName,
-              status: projectData.status,
-              start_date: projectData.startDate,
-              end_date: projectData.endDate,
-              description: projectData.description,
-              created_by: createdBy || user.id,
+              created_by: user.id, // Use current user ID as creator
+              // Set timestamps if not provided
               created_at: createdAt || new Date().toISOString(),
               updated_at: updatedAt || new Date().toISOString(),
-              estimated: estimated !== undefined ? Number(estimated) || null : null,
             });
             
             // Add to local state as well
             addProject({
               id: newId,
-              name: projectData.name!,
-              location: projectData.location!,
-              clientName: projectData.clientName!,
-              status: projectData.status!,
-              startDate: projectData.startDate!,
-              endDate: projectData.endDate,
-              description: projectData.description,
+              name: projectName,
+              location: location,
+              clientName: clientName,
+              status: status,
+              startDate: startDate,
+              endDate: endDate,
+              description: description,
               panelCount: 0,
             });
             
             added++;
+            console.log(`Added new project: ${newId}`);
           }
         } else {
           failed++;
@@ -316,7 +333,7 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           <DialogHeader>
             <DialogTitle>Import Projects</DialogTitle>
             <DialogDescription>
-              Upload an Excel or CSV file with project data. Matching projects will be updated, and new projects will be added.
+              Import CSV or Excel files with project data. Required columns: ID and Name. Optional columns: Estimated, Created_at, Updated_at.
             </DialogDescription>
           </DialogHeader>
           
@@ -355,15 +372,17 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
                               }}
                             >
                               <option value="">Ignore</option>
+                              <option value="id">ID</option>
                               <option value="name">Project Name</option>
+                              <option value="estimated">Estimated</option>
+                              <option value="createdAt">Created At</option>
+                              <option value="updatedAt">Updated At</option>
                               <option value="location">Location</option>
                               <option value="clientName">Client Name</option>
                               <option value="status">Status</option>
                               <option value="startDate">Start Date</option>
                               <option value="endDate">End Date</option>
                               <option value="description">Description</option>
-                              <option value="estimated">Estimated</option>
-                              <option value="id">ID</option>
                             </select>
                           </div>
                         </TableHead>
@@ -407,8 +426,8 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
                 >
                   <Upload className="mr-2 h-4 w-4" /> Choose Excel/CSV file
                 </Button>
-                <p className="text-sm text-gray-500">
-                  Upload project data files with columns like Name, Location, Client Name, etc.
+                <p className="text-sm text-gray-500 text-center">
+                  Upload project data with columns: ID (required), Name, Estimated, Created_at, Updated_at
                 </p>
               </div>
             </div>
