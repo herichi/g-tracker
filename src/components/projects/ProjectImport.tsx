@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { Project, ProjectStatus } from '@/types';
@@ -187,15 +186,13 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           }
         }
         
-        // Normalize status
-        let status = extractValue('status') as ProjectStatus;
-        if (status) {
-          status = status.toLowerCase();
-          if (!['active', 'completed', 'on-hold'].includes(status)) {
-            status = 'active'; // Default status
-          }
-        } else {
-          status = 'active';
+        // Normalize status - FIX: Ensure status is a valid ProjectStatus
+        let rawStatus = (extractValue('status') as string || '').toLowerCase();
+        let status: ProjectStatus = 'active'; // Default status
+        
+        // Only assign if it's a valid ProjectStatus
+        if (rawStatus === 'active' || rawStatus === 'completed' || rawStatus === 'on-hold') {
+          status = rawStatus as ProjectStatus;
         }
         
         // Check if project already exists
@@ -208,7 +205,7 @@ const ProjectImport: React.FC<ProjectImportProps> = ({ onImportComplete }) => {
           name: extractValue('name') as string,
           location: extractValue('location') as string || 'Unknown',
           clientName: extractValue('clientName') as string || 'Unknown',
-          status: status as ProjectStatus,
+          status: status,
           startDate: startDate as string || new Date().toISOString().split('T')[0],
           endDate: endDate as string,
           description: extractValue('description') as string,
