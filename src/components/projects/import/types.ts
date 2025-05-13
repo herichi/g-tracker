@@ -13,20 +13,8 @@ export interface ColumnMapping {
   [excelColumn: string]: string;
 }
 
-export interface ProjectImportData {
-  id?: string; // Make id optional for updates
-  name: string;
-  location: string;
-  client_name: string;
-  status: ProjectStatus;
-  start_date: string;
-  created_by?: string; // Make created_by optional for updates
-  end_date?: string;
-  description?: string;
-  estimated?: number | null;
-  created_at?: string;
-  updated_at: string;
-}
+// Remove the ProjectImportData interface as we're using direct object literals
+// that match the Supabase table structure instead of this interface
 
 export type ProjectImportHookReturn = {
   importing: boolean;
