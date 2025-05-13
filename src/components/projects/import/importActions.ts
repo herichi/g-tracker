@@ -107,7 +107,7 @@ export async function processProjectsData(
           return;
         }
         
-        // For updates, prepare the update data
+        // For updates, prepare the update data (omit id and created_by since they shouldn't be changed)
         const projectData: ProjectImportData = {
           name: projectName,
           location: location || existingProject.location, 

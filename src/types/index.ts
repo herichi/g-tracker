@@ -1,4 +1,3 @@
-
 export type ProjectStatus = 'active' | 'completed' | 'on-hold';
 
 export interface Project {
@@ -12,6 +11,7 @@ export interface Project {
   clientName: string;
   panelCount: number;
   buildings?: Building[];
+  estimated?: number | null;
 }
 
 export interface Building {

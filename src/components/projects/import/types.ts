@@ -14,13 +14,13 @@ export interface ColumnMapping {
 }
 
 export interface ProjectImportData {
-  id: string;
+  id?: string; // Make id optional for updates
   name: string;
   location: string;
   client_name: string;
   status: ProjectStatus;
   start_date: string;
-  created_by: string;
+  created_by?: string; // Make created_by optional for updates
   end_date?: string;
   description?: string;
   estimated?: number | null;
