@@ -1,4 +1,3 @@
-
 import * as XLSX from 'xlsx';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
@@ -79,7 +78,7 @@ export async function processProjectsData(
       const rawStatus = extractValueFromRow(row, 'status', columnMappings) as string;
       const status = normalizeStatus(rawStatus);
 
-      // Check if project already exists - convert IDs to strings for reliable comparison
+      // Check if project already exists - convert IDs to strings and trim for reliable comparison
       const projectIdStr = String(projectId).trim();
       const existingProject = projects.find(p => String(p.id).trim() === projectIdStr);
       
@@ -98,7 +97,8 @@ export async function processProjectsData(
           status !== existingProject.status ||
           startDate !== existingProject.startDate ||
           (endDate !== existingProject.endDate && (endDate || existingProject.endDate)) || // Handle case where one is undefined
-          (description !== existingProject.description && (description !== undefined || existingProject.description !== undefined));
+          (description !== existingProject.description && (description !== undefined || existingProject.description !== undefined)) ||
+          (estimated !== existingProject.estimated && (estimated !== null || existingProject.estimated !== null));
         
         // Skip if no changes
         if (!hasChanges) {
@@ -109,13 +109,11 @@ export async function processProjectsData(
         
         // For updates, prepare the update data
         const projectData: ProjectImportData = {
-          id: projectIdStr,
           name: projectName,
           location: location || existingProject.location, 
           client_name: clientName || existingProject.clientName,
           status: status,
           start_date: startDate,
-          created_by: userId,
           updated_at: new Date().toISOString() // Always use current timestamp for updates
         };
         
@@ -132,13 +130,9 @@ export async function processProjectsData(
           projectData.estimated = estimated;
         }
         
-        if (createdAt) {
-          projectData.created_at = createdAt;
-        }
-        
         console.log("Updating project:", projectIdStr, projectData);
         
-        // Perform the update
+        // Perform the update using Supabase
         const { error } = await supabase
           .from('projects')
           .update(projectData)
@@ -160,6 +154,7 @@ export async function processProjectsData(
           startDate: startDate,
           endDate: endDate || existingProject.endDate,
           description: description !== undefined ? description : existingProject.description,
+          estimated: estimated !== null ? estimated : existingProject.estimated
         };
         
         updateProject(updatedProjectData);
@@ -218,6 +213,7 @@ export async function processProjectsData(
           startDate: startDate,
           endDate: endDate,
           description: description,
+          estimated: estimated,
           panelCount: 0,
         };
         
