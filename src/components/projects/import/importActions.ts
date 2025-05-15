@@ -108,7 +108,17 @@ export async function processProjectsData(
         }
         
         // For updates, prepare the update data (omit id and created_by since they shouldn't be changed)
-        const projectData = {
+        const projectData: {
+          name: string;
+          location: string;
+          client_name: string;
+          status: string;
+          start_date: string;
+          updated_at: string;
+          end_date?: string;
+          description?: string;
+          estimated?: number | null;
+        } = {
           name: projectName,
           location: location || existingProject.location, 
           client_name: clientName || existingProject.clientName,
@@ -165,7 +175,20 @@ export async function processProjectsData(
         const newId = projectIdStr || uuidv4();
         
         // For new projects, prepare the insert data
-        const projectData = {
+        const projectData: {
+          id: string;
+          name: string;
+          location: string;
+          client_name: string;
+          status: string;
+          start_date: string;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+          end_date?: string;
+          description?: string;
+          estimated?: number | null;
+        } = {
           id: newId,
           name: projectName,
           location: location,
