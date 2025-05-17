@@ -84,6 +84,7 @@ const ProjectDetail: React.FC = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dimensions</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated By</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
@@ -99,6 +100,11 @@ const ProjectDetail: React.FC = () => {
                   {panel.dimensions.width} × {panel.dimensions.height} × {panel.dimensions.thickness} mm
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">{panel.weight} kg</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {panel.statusHistory && panel.statusHistory.length > 0 
+                    ? panel.statusHistory[panel.statusHistory.length - 1].updatedBy || 'Unknown'
+                    : 'N/A'}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <Button 
                     variant="ghost" 

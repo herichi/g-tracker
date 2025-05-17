@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAppContext } from "@/context/AppContext";
@@ -505,10 +504,15 @@ const PanelDetail: React.FC = () => {
                     <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-info rounded-full -left-3 ring-8 ring-white">
                       <Factory className="w-3 h-3 text-white" />
                     </span>
-                    <h3 className="flex items-center mb-1 text-sm font-semibold">Manufactured</h3>
-                    <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
+                    <div className="flex items-center mb-1">
+                      <h3 className="text-sm font-semibold mr-2">Manufactured</h3>
+                    </div>
+                    <time className="block mb-1 text-xs font-normal leading-none text-gray-400">
                       {panel.manufacturedDate}
                     </time>
+                    <p className="text-xs text-gray-500">
+                      <User className="inline h-3 w-3 mr-1" /> Factory Admin
+                    </p>
                   </li>
                   
                   {/* Display status history if available */}
@@ -523,14 +527,12 @@ const PanelDetail: React.FC = () => {
                         </span>
                         <StatusBadge status={history.status} />
                       </div>
-                      <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
+                      <time className="block mb-1 text-xs font-normal leading-none text-gray-400">
                         {history.date}
                       </time>
-                      {history.updatedBy && (
-                        <p className="text-xs text-gray-500 mb-1">
-                          <User className="inline h-3 w-3 mr-1" /> {history.updatedBy}
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-500 mb-1">
+                        <User className="inline h-3 w-3 mr-1" /> {history.updatedBy || "Unknown User"}
+                      </p>
                       {history.notes && (
                         <p className="text-xs text-gray-600 mb-1">{history.notes}</p>
                       )}
@@ -550,10 +552,15 @@ const PanelDetail: React.FC = () => {
                           <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-pending rounded-full -left-3 ring-8 ring-white">
                             <Truck className="w-3 h-3 text-white" />
                           </span>
-                          <h3 className="flex items-center mb-1 text-sm font-semibold">Delivered</h3>
-                          <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
+                          <div className="flex items-center mb-1">
+                            <h3 className="text-sm font-semibold mr-2">Delivered</h3>
+                          </div>
+                          <time className="block mb-1 text-xs font-normal leading-none text-gray-400">
                             {panel.deliveredDate}
                           </time>
+                          <p className="text-xs text-gray-500">
+                            <User className="inline h-3 w-3 mr-1" /> Unknown User
+                          </p>
                         </li>
                       )}
                       
@@ -562,10 +569,15 @@ const PanelDetail: React.FC = () => {
                           <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-warning rounded-full -left-3 ring-8 ring-white">
                             <Hammer className="w-3 h-3 text-white" />
                           </span>
-                          <h3 className="flex items-center mb-1 text-sm font-semibold">Installed</h3>
-                          <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
+                          <div className="flex items-center mb-1">
+                            <h3 className="text-sm font-semibold mr-2">Installed</h3>
+                          </div>
+                          <time className="block mb-1 text-xs font-normal leading-none text-gray-400">
                             {panel.installedDate}
                           </time>
+                          <p className="text-xs text-gray-500">
+                            <User className="inline h-3 w-3 mr-1" /> Unknown User
+                          </p>
                         </li>
                       )}
                       
@@ -574,15 +586,20 @@ const PanelDetail: React.FC = () => {
                           <span className="absolute flex items-center justify-center w-6 h-6 bg-construction-status-success rounded-full -left-3 ring-8 ring-white">
                             <ShieldCheck className="w-3 h-3 text-white" />
                           </span>
-                          <h3 className="flex items-center mb-1 text-sm font-semibold">
-                            {panel.status === 'inspected' ? 'Inspected' : 
-                             panel.status === 'rejected' ? 'Rejected' :
-                             panel.status === 'approved_final' ? 'Approved Final' :
-                             panel.status === 'checked' ? 'Checked' : panel.status}
-                          </h3>
-                          <time className="block mb-2 text-xs font-normal leading-none text-gray-400">
+                          <div className="flex items-center mb-1">
+                            <h3 className="text-sm font-semibold mr-2">
+                              {panel.status === 'inspected' ? 'Inspected' : 
+                               panel.status === 'rejected' ? 'Rejected' :
+                               panel.status === 'approved_final' ? 'Approved Final' :
+                               panel.status === 'checked' ? 'Checked' : panel.status}
+                            </h3>
+                          </div>
+                          <time className="block mb-1 text-xs font-normal leading-none text-gray-400">
                             {panel.inspectedDate}
                           </time>
+                          <p className="text-xs text-gray-500">
+                            <User className="inline h-3 w-3 mr-1" /> Unknown User
+                          </p>
                         </li>
                       )}
                     </>
