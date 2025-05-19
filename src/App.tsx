@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Outlet } from "react-router-dom";
-import { ThemeProvider } from "@/context/ThemeContext";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/toaster"
 
@@ -21,10 +20,10 @@ import UserManagement from "@/pages/UserManagement";
 import NotFound from "@/pages/NotFound";
 import NewPanel from "@/pages/NewPanel";
 
-import { AppProvider } from "@/context/AppContext";
-import { AuthProvider } from "@/context/AuthContext";
-import AppLayout from "@/components/AppLayout";
+import AppLayout from "@/layouts/AppLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { AppContextProvider } from "@/context/AppContext";
+import { AuthContextProvider } from "@/context/AuthContext";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -38,19 +37,15 @@ function App() {
 
   return (
     <Router>
-      <ThemeProvider>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <TooltipProvider>
-          <AppProvider>
-            <AuthProvider>
+          <AppContextProvider>
+            <AuthContextProvider>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route element={
-                  <ProtectedRoute>
-                    <Outlet />
-                  </ProtectedRoute>
-                }>
+                <Route element={<ProtectedRoute />}>
                   <Route element={<AppLayout />}>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/projects" element={<Projects />} />
@@ -68,8 +63,8 @@ function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster />
-            </AuthProvider>
-          </AppProvider>
+            </AuthContextProvider>
+          </AppContextProvider>
         </TooltipProvider>
       </ThemeProvider>
     </Router>
