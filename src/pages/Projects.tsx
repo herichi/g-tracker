@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "@/context/AppContext";
@@ -134,6 +135,13 @@ const Projects: React.FC = () => {
                         <>
                           <div className="text-gray-500">End Date:</div>
                           <div>{project.endDate}</div>
+                        </>
+                      )}
+                      
+                      {project.estimated !== null && project.estimated !== undefined && (
+                        <>
+                          <div className="text-gray-500">Estimated Panels:</div>
+                          <div>{project.estimated}</div>
                         </>
                       )}
                     </div>

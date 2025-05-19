@@ -43,6 +43,11 @@ const projectSchema = z.object({
   clientName: z.string().min(2, { message: 'Client name is required' }),
   startDate: z.string().min(1, { message: 'Start date is required' }),
   endDate: z.string().optional(),
+  estimated: z.coerce.number()
+    .int({ message: "Must be a whole number" })
+    .nonnegative({ message: "Must be zero or greater" })
+    .optional()
+    .nullable(),
   status: z.enum(['active', 'completed', 'on-hold'] as const),
   description: z.string().optional()
 });
@@ -69,7 +74,8 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ isOpen, onClose }) 
       clientName: '',
       startDate: new Date().toISOString().split('T')[0],
       status: 'active',
-      description: ''
+      description: '',
+      estimated: null
     }
   });
 
@@ -93,7 +99,8 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ isOpen, onClose }) 
       endDate: values.endDate,
       description: values.description,
       clientName: values.clientName,
-      panelCount: 0
+      panelCount: 0,
+      estimated: values.estimated
     };
     
     try {
@@ -109,6 +116,7 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ isOpen, onClose }) 
           end_date: newProject.endDate,
           description: newProject.description,
           client_name: newProject.clientName,
+          estimated: newProject.estimated,
           created_by: user.id
         });
           
@@ -219,31 +227,56 @@ const AddProjectDialog: React.FC<AddProjectDialogProps> = ({ isOpen, onClose }) 
                   />
                 </div>
                 
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="on-hold">On Hold</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="estimated"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estimated Panels</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
+                          <Input 
+                            type="number" 
+                            placeholder="Enter estimated number of panels"
+                            {...field}
+                            value={field.value === null ? '' : field.value}
+                            onChange={(e) => {
+                              const value = e.target.value === '' ? null : parseInt(e.target.value, 10);
+                              field.onChange(value);
+                            }}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="on-hold">On Hold</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <FormField
                   control={form.control}
