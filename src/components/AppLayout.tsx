@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard,
@@ -19,11 +20,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
-
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+const AppLayout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
@@ -197,7 +194,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         </header>
         
         <main className="flex-1 overflow-y-auto p-5 bg-volta-background">
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>
