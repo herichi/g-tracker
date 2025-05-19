@@ -1,163 +1,74 @@
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { Toaster } from "@/components/ui/toaster"
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AppProvider } from "@/context/AppContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { ThemeProvider } from "@/context/ThemeContext";
-import AppLayout from "@/components/AppLayout";
+import Index from "@/pages/Index";
+import Auth from "@/pages/Auth";
+import ResetPassword from "@/pages/ResetPassword";
+import Dashboard from "@/pages/Dashboard";
+import Projects from "@/pages/Projects";
+import ProjectDetail from "@/pages/ProjectDetail";
+import Panels from "@/pages/Panels";
+import PanelDetail from "@/pages/PanelDetail";
+import BuildingDetail from "@/pages/BuildingDetail";
+import Reports from "@/pages/Reports";
+import Messages from "@/pages/Messages";
+import Settings from "@/pages/Settings";
+import UserManagement from "@/pages/UserManagement";
+import NotFound from "@/pages/NotFound";
+import NewPanel from "@/pages/NewPanel";
+
+import AppLayout from "@/layouts/AppLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { AppContextProvider } from "@/context/AppContext";
+import { AuthContextProvider } from "@/context/AuthContext";
 
-// Pages
-import Dashboard from "./pages/Dashboard";
-import Projects from "./pages/Projects";
-import ProjectDetail from "./pages/ProjectDetail";
-import Panels from "./pages/Panels";
-import PanelDetail from "./pages/PanelDetail";
-import BuildingDetail from "./pages/BuildingDetail";
-import Settings from "./pages/Settings";
-import Users from "./pages/Users";
-import UserManagementPage from "./pages/UserManagement";
-import Messages from "./pages/Messages";
-import Reports from "./pages/Reports"; // Add import for the Reports page
-import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth";
-import ResetPassword from "./pages/ResetPassword";
+function App() {
+  const [loading, setLoading] = useState(true);
 
-const queryClient = new QueryClient();
+  useEffect(() => {
+    // Simulate loading
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+  }, []);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <AppProvider>
-          <ThemeProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+  return (
+    <Router>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <TooltipProvider>
+          <AppContextProvider>
+            <AuthContextProvider>
               <Routes>
-                <Route path="/auth" element={<Auth />} />
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route 
-                  path="/" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <Dashboard />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/projects" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <Projects />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/project/:projectId" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <ProjectDetail />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/building/:buildingId" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <BuildingDetail />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/panels" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <Panels />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/panel/:panelId" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <PanelDetail />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/users" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <Users />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/user-management" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <UserManagementPage />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/messages" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <Messages />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/reports" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <Reports />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/settings" 
-                  element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <Settings />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } 
-                />
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<AppLayout />}>
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/projects" element={<Projects />} />
+                    <Route path="/project/:projectId" element={<ProjectDetail />} />
+                    <Route path="/panels" element={<Panels />} />
+                    <Route path="/panel/new" element={<NewPanel />} />
+                    <Route path="/panel/:panelId" element={<PanelDetail />} />
+                    <Route path="/building/:buildingId" element={<BuildingDetail />} />
+                    <Route path="/reports" element={<Reports />} />
+                    <Route path="/messages" element={<Messages />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/user-management" element={<UserManagement />} />
+                  </Route>
+                </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </BrowserRouter>
-          </ThemeProvider>
-        </AppProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+              <Toaster />
+            </AuthContextProvider>
+          </AppContextProvider>
+        </TooltipProvider>
+      </ThemeProvider>
+    </Router>
+  );
+}
 
 export default App;
