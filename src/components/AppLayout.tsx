@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,10 @@ import {
   BarChart,
   Menu,
   LogOut,
-  Mail,
   Users,
   FileText,
+  Building,
+  QrCode,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -44,9 +46,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       href: "/projects"
     },
     {
-      label: "Panels",
-      icon: <Layers className="h-5 w-5" />,
-      href: "/panels"
+      label: "Items",
+      icon: <Building className="h-5 w-5" />,
+      href: "/items"  
+    },
+    {
+      label: "QR Scanner",
+      icon: <QrCode className="h-5 w-5" />,
+      href: "/qr-scanner"
     },
     {
       label: "Reports",
@@ -82,55 +89,68 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className={`flex h-screen overflow-hidden bg-volta-background ${theme}`}>
+    <div className={`flex h-screen overflow-hidden modern-layout ${theme}`}>
       {/* Mobile Menu Button - Only visible on mobile */}
       {isMobile && (
         <Button
           variant="ghost"
           size="icon"
-          className="fixed top-4 left-4 z-50 lg:hidden text-white"
+          className="fixed top-4 left-4 z-50 lg:hidden"
           onClick={toggleMobileMenu}
         >
           <Menu className="h-6 w-6" />
         </Button>
       )}
 
-      {/* Sidebar - Hidden on mobile unless menu is open */}
+      {/* Sidebar - Modern design matching the image */}
       <div
         className={cn(
-          "bg-volta-dark text-white flex flex-col transition-all duration-300 ease-in-out relative",
+          "modern-sidebar flex flex-col transition-all duration-300 ease-in-out relative",
           collapsed ? "w-16" : "w-64",
           isMobile ? "fixed inset-y-0 left-0 z-40" : "relative",
           isMobile && !mobileMenuOpen ? "-translate-x-full" : "translate-x-0"
         )}
       >
-        {/* Logo area */}
+        {/* Logo area - matching the image */}
         <div 
           className={cn(
-            "h-16 flex items-center justify-center border-b border-white/10 text-xl font-semibold",
-            collapsed ? "px-2" : "px-4"
+            "h-16 flex items-center px-4 border-b border-modern-border",
+            collapsed ? "justify-center" : "justify-start"
           )}
         >
-          {collapsed ? "QP" : "Qatar Panels"}
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-modern-primary rounded-md flex items-center justify-center">
+              <Building className="h-5 w-5 text-white" />
+            </div>
+            {!collapsed && (
+              <div>
+                <div className="font-semibold text-foreground">Doha Extraco</div>
+                <div className="text-xs text-muted-foreground">Construction Tracker</div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Category label */}
-        <div className="px-4 py-2 text-sm opacity-70">
-          {!collapsed && "Application"}
-        </div>
+        {/* Navigation label */}
+        {!collapsed && (
+          <div className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Main Navigation
+          </div>
+        )}
 
         {/* Navigation */}
         <nav className="flex-1 py-2 overflow-y-auto">
-          <ul className="space-y-1 px-2">
+          <ul className="space-y-1 px-3">
             {navItems.map((item) => (
               <li key={item.href}>
                 <Link
                   to={item.href}
                   className={cn(
-                    "flex items-center px-3 py-2 rounded-md transition-colors duration-200",
+                    "flex items-center px-3 py-2.5 text-sm rounded-md transition-all duration-200",
                     location.pathname === item.href
-                      ? "volta-sidebar-item-active"
-                      : "volta-sidebar-item"
+                      ? "modern-sidebar-item-active"
+                      : "modern-sidebar-item",
+                    collapsed && "justify-center"
                   )}
                 >
                   {item.icon}
@@ -141,20 +161,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           </ul>
         </nav>
 
-        {/* Logout button */}
-        <div className="p-2 border-t border-white/10">
-          <Button 
-            variant="ghost" 
-            className={cn(
-              "w-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10",
-              collapsed ? "px-2" : "px-3"
-            )}
-            onClick={handleSignOut}
-          >
-            <LogOut className="h-5 w-5" />
-            {!collapsed && <span className="ml-3">Sign Out</span>}
-          </Button>
-        </div>
+        {/* Administration section for admins */}
+        {userRole === "admin" && !collapsed && (
+          <div className="px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider border-t border-modern-border">
+            Administration
+          </div>
+        )}
 
         {/* Collapse button - Hidden on mobile */}
         {!isMobile && (
@@ -162,15 +174,25 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             variant="ghost"
             size="icon"
             onClick={toggleSidebar}
-            className="absolute -right-3 top-20 bg-volta-primary rounded-full border border-white/20 text-white h-6 w-6 flex items-center justify-center"
+            className="absolute -right-3 top-20 bg-white rounded-full border border-modern-border shadow-sm h-6 w-6 flex items-center justify-center hover:shadow-md"
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
         )}
 
-        {/* Footer */}
-        <div className="p-4 border-t border-white/10 text-xs text-white/50">
-          {!collapsed && <div>Doha Extraco © 2024</div>}
+        {/* User section at bottom */}
+        <div className="p-3 border-t border-modern-border">
+          <Button 
+            variant="ghost" 
+            className={cn(
+              "w-full flex items-center text-muted-foreground hover:text-foreground hover:bg-white/50 rounded-md",
+              collapsed ? "justify-center px-2" : "justify-start px-3"
+            )}
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-4 w-4" />
+            {!collapsed && <span className="ml-3 text-sm">Sign Out</span>}
+          </Button>
         </div>
       </div>
 
@@ -184,19 +206,19 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-volta-primary h-16 border-b border-volta-border flex items-center justify-between px-4 text-white">
+        {/* Header - Clean design matching the image */}
+        <header className="bg-white h-16 border-b border-modern-border flex items-center justify-between px-6 shadow-sm">
           <div className="flex items-center">
-            <h1 className="text-xl font-semibold">Qatar Panel Tracker</h1>
+            <h1 className="text-xl font-semibold text-foreground">Doha Extraco Tracker</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="w-8 h-8 rounded-full bg-volta-accent flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-modern-primary flex items-center justify-center text-white text-sm font-medium">
               {user?.email?.charAt(0).toUpperCase() || 'U'}
             </div>
           </div>
         </header>
         
-        <main className="flex-1 overflow-y-auto p-5 bg-volta-background">
+        <main className="flex-1 overflow-y-auto p-6 modern-layout">
           {children}
         </main>
       </div>
