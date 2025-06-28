@@ -14,7 +14,7 @@ import PanelFilterBar from "@/components/reports/PanelFilterBar";
 import ReportActions from "@/components/reports/ReportActions";
 import useReportFunctions from "@/hooks/useReportFunctions";
 
-// Define the item structure based on the database
+// Define the item structure based on the actual database schema
 interface DatabaseItem {
   id: string;
   project_id: string;
@@ -25,7 +25,7 @@ interface DatabaseItem {
   issue_transmittal_no: string;
   dwg_no: string;
   description: string;
-  tag: string;
+  panel_tag: string;  // This matches the actual database column name
   unit_qty: number | null;
   ifp_qty_nos: number;
   ifp_qty: number | null;
@@ -123,7 +123,7 @@ const Reports: React.FC = () => {
           issueTransmittalNo: item.issue_transmittal_no,
           dwgNo: item.dwg_no,
           description: item.description,
-          panelTag: item.tag,
+          panelTag: item.panel_tag,  // Now correctly mapping panel_tag
           unitQty: item.unit_qty || undefined,
           ifpQtyNos: item.ifp_qty_nos,
           ifpQtyMeasurement: item.ifp_qty || undefined,
