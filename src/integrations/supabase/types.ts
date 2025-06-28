@@ -47,69 +47,115 @@ export type Database = {
           },
         ]
       }
-      panels: {
+      history: {
         Row: {
-          building_id: string
+          changed_at: string
+          changed_by: string
           created_at: string
-          created_by: string
-          floor_number: number
-          height: number
-          id: string
-          manufactured_date: string
-          name: string
-          project_id: string
-          qr_code_url: string | null
-          serial_number: string
-          status: string
-          thickness: number
-          type: string
-          weight: number
-          width: number
+          new_status: string
+          notes: string | null
+          old_status: string | null
+          panel_id: string
+          panel_tag: string | null
         }
         Insert: {
-          building_id: string
+          changed_at?: string
+          changed_by: string
           created_at?: string
-          created_by: string
-          floor_number: number
-          height: number
-          id: string
-          manufactured_date: string
-          name: string
-          project_id: string
-          qr_code_url?: string | null
-          serial_number: string
-          status: string
-          thickness: number
-          type: string
-          weight: number
-          width: number
+          new_status: string
+          notes?: string | null
+          old_status?: string | null
+          panel_id: string
+          panel_tag?: string | null
         }
         Update: {
-          building_id?: string
+          changed_at?: string
+          changed_by?: string
           created_at?: string
-          created_by?: string
-          floor_number?: number
-          height?: number
-          id?: string
-          manufactured_date?: string
-          name?: string
-          project_id?: string
-          qr_code_url?: string | null
-          serial_number?: string
-          status?: string
-          thickness?: number
-          type?: string
-          weight?: number
-          width?: number
+          new_status?: string
+          notes?: string | null
+          old_status?: string | null
+          panel_id?: string
+          panel_tag?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "panels_building_id_fkey"
-            columns: ["building_id"]
-            isOneToOne: false
-            referencedRelation: "buildings"
+            foreignKeyName: "fk_history_panel_id"
+            columns: ["panel_id"]
+            isOneToOne: true
+            referencedRelation: "panels"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      panels: {
+        Row: {
+          checked_by: string | null
+          created_at: string | null
+          date: string
+          deleted_at: string | null
+          description: string
+          draftman: string
+          dwg_no: string
+          id: string
+          ifp_qty: number | null
+          ifp_qty_nos: number
+          ifs_qty: number | null
+          issue_transmittal_no: string
+          name: string
+          notes: string | null
+          project_id: string
+          status: string | null
+          tag: string
+          type: string
+          unit_qty: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          checked_by?: string | null
+          created_at?: string | null
+          date: string
+          deleted_at?: string | null
+          description: string
+          draftman: string
+          dwg_no: string
+          id: string
+          ifp_qty?: number | null
+          ifp_qty_nos: number
+          ifs_qty?: number | null
+          issue_transmittal_no: string
+          name: string
+          notes?: string | null
+          project_id: string
+          status?: string | null
+          tag: string
+          type: string
+          unit_qty?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          checked_by?: string | null
+          created_at?: string | null
+          date?: string
+          deleted_at?: string | null
+          description?: string
+          draftman?: string
+          dwg_no?: string
+          id?: string
+          ifp_qty?: number | null
+          ifp_qty_nos?: number
+          ifs_qty?: number | null
+          issue_transmittal_no?: string
+          name?: string
+          notes?: string | null
+          project_id?: string
+          status?: string | null
+          tag?: string
+          type?: string
+          unit_qty?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
           {
             foreignKeyName: "panels_project_id_fkey"
             columns: ["project_id"]
