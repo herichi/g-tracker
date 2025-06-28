@@ -62,24 +62,6 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				},
-				// New modern light theme colors based on the image
-				modern: {
-					primary: '#2563EB',      // Blue primary color from the image
-					secondary: '#F8FAFC',    // Light gray background
-					accent: '#059669',       // Green accent for active states
-					warning: '#F59E0B',      // Orange for planning status
-					muted: '#64748B',        // Gray text
-					border: '#E2E8F0',       // Light borders
-					card: '#FFFFFF',         // White card background
-					sidebar: '#F1F5F9',      // Light sidebar background
-				},
-				// Status colors matching the image
-				status: {
-					active: '#059669',       // Green
-					planning: '#2563EB',     // Blue
-					completed: '#6B7280',    // Gray
-					pending: '#F59E0B'       // Orange
 				}
 			},
 			borderRadius: {
@@ -103,19 +85,11 @@ export default {
 					to: {
 						height: '0'
 					}
-				},
-				'status-pulse': {
-					'0%, 100%': { opacity: '1' },
-					'50%': { opacity: '0.6' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'status-pulse': 'status-pulse 2s ease-in-out infinite'
-			},
-			fontFamily: {
-				sans: ['Inter', 'sans-serif']
+				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
 		}
 	},
