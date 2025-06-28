@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useAppContext } from "@/context/AppContext";
-import { Panel } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -15,12 +14,73 @@ import PanelFilterBar from "@/components/reports/PanelFilterBar";
 import ReportActions from "@/components/reports/ReportActions";
 import useReportFunctions from "@/hooks/useReportFunctions";
 
+// Define the item structure based on the database
+interface DatabaseItem {
+  id: string;
+  project_id: string;
+  name: string;
+  type: string;
+  status: string;
+  date: string;
+  issue_transmittal_no: string;
+  dwg_no: string;
+  description: string;
+  tag: string;
+  unit_qty: number | null;
+  ifp_qty_nos: number;
+  ifp_qty: number | null;
+  draftman: string;
+  checked_by: string | null;
+  notes: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+// Transform database item to panel-like structure for compatibility
+interface TransformedPanel {
+  id: string;
+  projectId: string;
+  buildingId?: string;
+  serialNumber: string;
+  name: string;
+  type: string;
+  status: any;
+  location?: string;
+  dimensions: {
+    width: number;
+    height: number;
+    thickness: number;
+  };
+  weight: number;
+  manufacturedDate: string;
+  deliveredDate?: string;
+  installedDate?: string;
+  inspectedDate?: string;
+  date?: string;
+  issueTransmittalNo?: string;
+  dwgNo?: string;
+  description?: string;
+  panelTag?: string;
+  unitQty?: number;
+  unitQtyType?: 'sqm' | 'lm';
+  ifpQtyNos?: number;
+  ifpQtyMeasurement?: number;
+  draftman?: string;
+  checkedBy?: string;
+  notes?: string;
+  statusUpdate?: string;
+  qrCode?: string;
+  qrCodeImage?: string;
+  groupIds?: string[];
+  statusHistory?: any[];
+}
+
 const Reports: React.FC = () => {
-  const { projects, buildings, panels } = useAppContext();
+  const { projects, buildings } = useAppContext();
   const [selectedProject, setSelectedProject] = useState<string>("all-projects");
   const [selectedBuilding, setSelectedBuilding] = useState<string>("all-buildings");
   const [loading, setLoading] = useState<boolean>(false);
-  const [panelsWithQR, setPanelsWithQR] = useState<Panel[]>([]);
+  const [panelsWithQR, setPanelsWithQR] = useState<TransformedPanel[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   
   const filteredBuildings = selectedProject && selectedProject !== "all-projects"
@@ -33,7 +93,7 @@ const Reports: React.FC = () => {
   const handleRefreshQRCodes = async () => {
     setLoading(true);
     try {
-      // Fetch panels with QR codes from Supabase
+      // Fetch items from Supabase
       const { data, error } = await supabase
         .from('panels')
         .select('*');
@@ -43,32 +103,43 @@ const Reports: React.FC = () => {
       }
       
       if (data) {
-        // Transform the database columns to match our Panel type
-        const panelData = data.map(panel => ({
-          id: panel.id,
-          projectId: panel.project_id,
-          buildingId: panel.building_id,
-          serialNumber: panel.serial_number,
-          name: panel.name,
-          type: panel.type,
-          status: panel.status as any,
+        // Transform the database items to match the expected panel structure
+        const transformedData: TransformedPanel[] = data.map((item: DatabaseItem) => ({
+          id: item.id,
+          projectId: item.project_id,
+          buildingId: undefined, // Items don't have building association
+          serialNumber: item.name, // Use name as serial number
+          name: item.name,
+          type: item.type,
+          status: item.status as any,
           dimensions: {
-            width: panel.width,
-            height: panel.height,
-            thickness: panel.thickness
+            width: 100, // Default values since items don't have dimensions
+            height: 200,
+            thickness: 10
           },
-          weight: panel.weight,
-          manufacturedDate: panel.manufactured_date,
-          qrCodeImage: panel.qr_code_url
-        })) as Panel[];
+          weight: 50, // Default weight
+          manufacturedDate: item.date,
+          date: item.date,
+          issueTransmittalNo: item.issue_transmittal_no,
+          dwgNo: item.dwg_no,
+          description: item.description,
+          panelTag: item.tag,
+          unitQty: item.unit_qty || undefined,
+          ifpQtyNos: item.ifp_qty_nos,
+          ifpQtyMeasurement: item.ifp_qty || undefined,
+          draftman: item.draftman,
+          checkedBy: item.checked_by || undefined,
+          notes: item.notes || undefined,
+          qrCodeImage: undefined // Items don't have QR codes yet
+        }));
         
-        setPanelsWithQR(panelData);
+        setPanelsWithQR(transformedData);
       }
     } catch (err: any) {
-      console.error("Error fetching panels with QR codes:", err);
+      console.error("Error fetching items:", err);
       toast({
         title: "Error",
-        description: `Failed to refresh QR codes: ${err.message}`,
+        description: `Failed to refresh data: ${err.message}`,
         variant: "destructive"
       });
     } finally {
@@ -103,9 +174,9 @@ const Reports: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Panel Reports</h2>
+        <h2 className="text-3xl font-bold tracking-tight">Item Reports</h2>
         <p className="text-muted-foreground">
-          Generate and export reports with panel QR codes for easy tracking and identification
+          Generate and export reports with item data for easy tracking and identification
         </p>
       </div>
       
@@ -113,7 +184,7 @@ const Reports: React.FC = () => {
         <CardHeader>
           <CardTitle className="flex items-center">
             <FileText className="mr-2 h-5 w-5" />
-            Panel QR Code Reports
+            Item Reports
           </CardTitle>
         </CardHeader>
         <CardContent>

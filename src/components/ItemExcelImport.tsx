@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FileSpreadsheet, Upload, CheckCircle, AlertCircle } from 'lucide-react';
-import { Item, ItemFormData } from '@/types/item';
+import { ItemFormData, ItemStatus } from '@/types/item';
 
 interface ItemExcelImportProps {
   onImport: (items: ItemFormData[]) => Promise<void>;
@@ -20,6 +20,8 @@ interface ImportResult {
   failed: number;
   errors: string[];
 }
+
+const validStatuses: ItemStatus[] = ['Proceed for Delivery', 'In Progress', 'Completed', 'On Hold'];
 
 export const ItemExcelImport: React.FC<ItemExcelImportProps> = ({ onImport, onClose }) => {
   const [file, setFile] = useState<File | null>(null);
@@ -47,21 +49,30 @@ export const ItemExcelImport: React.FC<ItemExcelImportProps> = ({ onImport, onCl
           const worksheet = workbook.Sheets[sheetName];
           const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-          const items: ItemFormData[] = jsonData.map((row: any) => ({
-            project_id: String(row.project_id || row.Project_ID || ''),
-            name: String(row.name || row.Name || ''),
-            type: String(row.type || row.Type || ''),
-            status: String(row.status || row.Status || 'In Progress'),
-            date: row.date || row.Date || new Date().toISOString().split('T')[0],
-            issue_transmittal_no: String(row.issue_transmittal_no || row.Issue_Transmittal_No || ''),
-            dwg_no: String(row.dwg_no || row.Dwg_No || ''),
-            description: String(row.description || row.Description || ''),
-            panel_tag: String(row.panel_tag || row.Panel_Tag || ''),
-            unit_qty: parseFloat(row.unit_qty || row.Unit_Qty || 0),
-            ifp_qty_nos: parseInt(row.ifp_qty_nos || row.IFP_Qty_Nos || 0),
-            ifp_qty: parseFloat(row.ifp_qty || row.IFP_Qty || 0),
-            draftman: String(row.draftman || row.Draftman || ''),
-          }));
+          const items: ItemFormData[] = jsonData.map((row: any) => {
+            // Validate and normalize status
+            let status: ItemStatus = 'In Progress';
+            const rowStatus = String(row.status || row.Status || 'In Progress');
+            if (validStatuses.includes(rowStatus as ItemStatus)) {
+              status = rowStatus as ItemStatus;
+            }
+
+            return {
+              project_id: String(row.project_id || row.Project_ID || ''),
+              name: String(row.name || row.Name || ''),
+              type: String(row.type || row.Type || ''),
+              status: status,
+              date: row.date || row.Date || new Date().toISOString().split('T')[0],
+              issue_transmittal_no: String(row.issue_transmittal_no || row.Issue_Transmittal_No || ''),
+              dwg_no: String(row.dwg_no || row.Dwg_No || ''),
+              description: String(row.description || row.Description || ''),
+              panel_tag: String(row.panel_tag || row.Panel_Tag || ''),
+              unit_qty: parseFloat(row.unit_qty || row.Unit_Qty || 0),
+              ifp_qty_nos: parseInt(row.ifp_qty_nos || row.IFP_Qty_Nos || 0),
+              ifp_qty: parseFloat(row.ifp_qty || row.IFP_Qty || 0),
+              draftman: String(row.draftman || row.Draftman || ''),
+            };
+          });
 
           resolve(items);
         } catch (error) {
@@ -138,7 +149,8 @@ export const ItemExcelImport: React.FC<ItemExcelImportProps> = ({ onImport, onCl
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 Make sure your Excel file contains columns: project_id, name, type, status, date, 
-                issue_transmittal_no, dwg_no, description, panel_tag, unit_qty, ifp_qty_nos, ifp_qty, draftman
+                issue_transmittal_no, dwg_no, description, panel_tag, unit_qty, ifp_qty_nos, ifp_qty, draftman.
+                Valid status values: {validStatuses.join(', ')}
               </AlertDescription>
             </Alert>
 

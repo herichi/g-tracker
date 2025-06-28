@@ -14,21 +14,21 @@ import {
   FormLabel,
   FormMessage
 } from '@/components/ui/form';
-import { Building, Panel } from '@/types';
+import { Building } from '@/types';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
-// Schema for panel creation
-const panelSchema = z.object({
+// Schema for item creation
+const itemSchema = z.object({
   floorNumber: z.number().min(0, { message: 'Floor number is required' }),
-  panelCount: z.number().min(1, { message: 'At least 1 panel is required' }).max(100, { message: 'Maximum 100 panels per floor' }),
-  panelPrefix: z.string().min(1, { message: 'Panel prefix is required' }),
+  itemCount: z.number().min(1, { message: 'At least 1 item is required' }).max(100, { message: 'Maximum 100 items per floor' }),
+  itemPrefix: z.string().min(1, { message: 'Item prefix is required' }),
 });
 
-type PanelFormValues = z.infer<typeof panelSchema>;
+type ItemFormValues = z.infer<typeof itemSchema>;
 
 interface AddFloorsFormProps {
   building: Building;
@@ -37,89 +37,63 @@ interface AddFloorsFormProps {
 }
 
 const AddFloorsForm: React.FC<AddFloorsFormProps> = ({ building, onComplete, onAddAnother }) => {
-  const { addPanel } = useAppContext();
   const { toast } = useToast();
   const { user } = useAuth();
   const [currentFloor, setCurrentFloor] = useState(0);
 
-  const form = useForm<PanelFormValues>({
-    resolver: zodResolver(panelSchema),
+  const form = useForm<ItemFormValues>({
+    resolver: zodResolver(itemSchema),
     defaultValues: {
       floorNumber: 0,
-      panelCount: 5,
-      panelPrefix: `${building.name.slice(0, 3).toUpperCase()}-F0-`,
+      itemCount: 5,
+      itemPrefix: `${building.name.slice(0, 3).toUpperCase()}-F0-`,
     }
   });
 
   React.useEffect(() => {
     form.setValue('floorNumber', currentFloor);
-    form.setValue('panelPrefix', `${building.name.slice(0, 3).toUpperCase()}-F${currentFloor}-`);
+    form.setValue('itemPrefix', `${building.name.slice(0, 3).toUpperCase()}-F${currentFloor}-`);
   }, [currentFloor, form, building.name]);
 
-  const onSubmit = async (values: PanelFormValues) => {
-    const panels: Panel[] = [];
+  const onSubmit = async (values: ItemFormValues) => {
     const today = new Date().toISOString().split('T')[0];
     
-    // Create panels for this floor
-    for (let i = 1; i <= values.panelCount; i++) {
-      const panelId = uuidv4();
-      const serialNumber = `${values.panelPrefix}${i.toString().padStart(3, '0')}`;
+    // Create items for this floor
+    const itemsForDb = [];
+    for (let i = 1; i <= values.itemCount; i++) {
+      const itemId = uuidv4();
+      const name = `${values.itemPrefix}${i.toString().padStart(3, '0')}`;
       
-      const newPanel: Panel = {
-        id: panelId,
-        projectId: building.projectId,
-        buildingId: building.id,
-        serialNumber,
-        name: serialNumber,
+      itemsForDb.push({
+        id: itemId,
+        project_id: building.projectId,
+        name: name,
         type: 'Standard',
-        status: 'manufactured',
-        dimensions: {
-          width: 100,
-          height: 200,
-          thickness: 10,
-        },
-        weight: 50,
-        manufacturedDate: today,
-      };
-      
-      panels.push(newPanel);
+        status: 'In Progress',
+        date: today,
+        issue_transmittal_no: `TN-${String(i).padStart(3, '0')}`,
+        dwg_no: `${values.itemPrefix}DWG-${i.toString().padStart(3, '0')}`,
+        description: `Floor ${values.floorNumber} item ${i}`,
+        tag: name,
+        draftman: 'System Generated',
+        ifp_qty_nos: 1,
+        unit_qty: 1.0,
+        ifp_qty: 1.0
+      });
     }
     
     try {
       // Add to database if user is logged in
       if (user) {
-        // Prepare panels for database insert
-        const panelsForDb = panels.map(panel => ({
-          id: panel.id,
-          project_id: panel.projectId,
-          building_id: panel.buildingId,
-          serial_number: panel.serialNumber,
-          name: panel.name,
-          type: panel.type,
-          status: panel.status,
-          width: panel.dimensions.width,
-          height: panel.dimensions.height,
-          thickness: panel.dimensions.thickness,
-          weight: panel.weight,
-          manufactured_date: panel.manufacturedDate,
-          floor_number: values.floorNumber,
-          created_by: user.id
-        }));
-        
-        // Insert into Supabase without calling .from() directly with table name
-        const { error } = await supabase.from('panels').insert(panelsForDb);
+        // Insert into Supabase
+        const { error } = await supabase.from('panels').insert(itemsForDb);
         
         if (error) throw error;
       }
       
-      // Add to local state
-      panels.forEach(panel => {
-        addPanel(panel);
-      });
-      
       toast({
-        title: 'Panels added',
-        description: `${values.panelCount} panels have been added to floor ${values.floorNumber}.`,
+        title: 'Items added',
+        description: `${values.itemCount} items have been added to floor ${values.floorNumber}.`,
       });
       
       // Move to the next floor if there are more floors
@@ -127,19 +101,19 @@ const AddFloorsForm: React.FC<AddFloorsFormProps> = ({ building, onComplete, onA
         setCurrentFloor(currentFloor + 1);
         form.reset({
           floorNumber: currentFloor + 1,
-          panelCount: 5,
-          panelPrefix: `${building.name.slice(0, 3).toUpperCase()}-F${currentFloor + 1}-`,
+          itemCount: 5,
+          itemPrefix: `${building.name.slice(0, 3).toUpperCase()}-F${currentFloor + 1}-`,
         });
       } else {
         // All floors have been processed
         toast({
           title: 'All floors completed',
-          description: `All ${building.floors} floors have been set up with panels.`,
+          description: `All ${building.floors} floors have been set up with items.`,
         });
       }
     } catch (error) {
       toast({
-        title: 'Error adding panels',
+        title: 'Error adding items',
         description: error instanceof Error ? error.message : 'An unknown error occurred',
         variant: 'destructive'
       });
@@ -152,9 +126,9 @@ const AddFloorsForm: React.FC<AddFloorsFormProps> = ({ building, onComplete, onA
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Add Panels to Floor</DialogTitle>
+        <DialogTitle>Add Items to Floor</DialogTitle>
         <DialogDescription>
-          {progressText} - Define panels for this floor
+          {progressText} - Define items for this floor
         </DialogDescription>
       </DialogHeader>
       
@@ -181,10 +155,10 @@ const AddFloorsForm: React.FC<AddFloorsFormProps> = ({ building, onComplete, onA
           
           <FormField
             control={form.control}
-            name="panelPrefix"
+            name="itemPrefix"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Panel Prefix</FormLabel>
+                <FormLabel>Item Prefix</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -195,10 +169,10 @@ const AddFloorsForm: React.FC<AddFloorsFormProps> = ({ building, onComplete, onA
           
           <FormField
             control={form.control}
-            name="panelCount"
+            name="itemCount"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Number of Panels</FormLabel>
+                <FormLabel>Number of Items</FormLabel>
                 <FormControl>
                   <Input 
                     type="number" 
@@ -223,7 +197,7 @@ const AddFloorsForm: React.FC<AddFloorsFormProps> = ({ building, onComplete, onA
                   Add Another Building
                 </Button>
                 <Button type="submit" className="bg-construction-blue hover:bg-construction-blue-dark">
-                  Add Panels & Finish
+                  Add Items & Finish
                 </Button>
               </>
             ) : (
@@ -232,7 +206,7 @@ const AddFloorsForm: React.FC<AddFloorsFormProps> = ({ building, onComplete, onA
                   Skip Remaining
                 </Button>
                 <Button type="submit" className="bg-construction-blue hover:bg-construction-blue-dark">
-                  Add Panels & Continue
+                  Add Items & Continue
                 </Button>
               </>
             )}
