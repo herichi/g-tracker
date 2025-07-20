@@ -104,10 +104,9 @@ export type Database = {
           issue_transmittal_no: string
           name: string
           notes: string | null
-          panel_tag: string
           project_id: string
           status: string | null
-          status_updates: string | null
+          tag: string
           type: string
           unit_qty: number | null
           updated_at: string | null
@@ -127,10 +126,9 @@ export type Database = {
           issue_transmittal_no: string
           name: string
           notes?: string | null
-          panel_tag: string
           project_id: string
           status?: string | null
-          status_updates?: string | null
+          tag: string
           type: string
           unit_qty?: number | null
           updated_at?: string | null
@@ -150,10 +148,9 @@ export type Database = {
           issue_transmittal_no?: string
           name?: string
           notes?: string | null
-          panel_tag?: string
           project_id?: string
           status?: string | null
-          status_updates?: string | null
+          tag?: string
           type?: string
           unit_qty?: number | null
           updated_at?: string | null

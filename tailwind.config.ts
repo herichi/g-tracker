@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -63,23 +62,44 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// New modern light theme colors based on the image
-				modern: {
-					primary: '#2563EB',      // Blue primary color from the image
-					secondary: '#F8FAFC',    // Light gray background
-					accent: '#059669',       // Green accent for active states
-					warning: '#F59E0B',      // Orange for planning status
-					muted: '#64748B',        // Gray text
-					border: '#E2E8F0',       // Light borders
-					card: '#FFFFFF',         // White card background
-					sidebar: '#F1F5F9',      // Light sidebar background
+				// New theme colors based on the provided image
+				volta: {
+					primary: '#8F2D3B',      // Main burgundy color
+					secondary: '#A73741',    // Lighter burgundy
+					dark: '#79242F',         // Darker burgundy
+					accent: '#C94E64',       // Highlight color
+					background: '#9A2C3D',   // Background burgundy
+					card: '#8F2D3B',         // Card background
+					text: '#FFFFFF',         // White text
+					muted: '#D17A8A',        // Muted text
+					border: '#7A2836',       // Border color
+					chart: {
+						blue: '#4B8BDF',     // Blue line in charts
+						orange: '#FF9F5A',   // Orange line in charts
+						red: '#F5515F',      // Red line in charts
+						green: '#4BD763',    // Green line in charts
+					}
 				},
-				// Status colors matching the image
-				status: {
-					active: '#059669',       // Green
-					planning: '#2563EB',     // Blue
-					completed: '#6B7280',    // Gray
-					pending: '#F59E0B'       // Orange
+				// Keep original construction theme colors
+				construction: {
+					blue: {
+						light: '#1976D2',
+						DEFAULT: '#1565C0',
+						dark: '#0D47A1'
+					},
+					gray: {
+						lightest: '#F5F5F5',
+						light: '#E0E0E0',
+						medium: '#9E9E9E',
+						dark: '#757575'
+					},
+					status: {
+						success: '#4CAF50',
+						warning: '#FFC107',
+						error: '#F44336',
+						info: '#2196F3',
+						pending: '#FF9800'
+					}
 				}
 			},
 			borderRadius: {

@@ -12,10 +12,10 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #2563EBaa);
+  filter: drop-shadow(0 0 2em #8F2D3Baa);
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #2563EBaa);
+  filter: drop-shadow(0 0 2em #8F2D3Baa);
 }
 
 @keyframes logo-spin {
@@ -41,66 +41,62 @@
   color: #888;
 }
 
-/* Modern theme specific styles matching the uploaded image */
-.modern-bg {
-  background-color: #F8FAFC;
-  color: #0F172A;
+/* Volta theme specific styles */
+.volta-bg {
+  background-color: #8F2D3B;
+  color: #ffffff;
 }
 
-.modern-text {
-  color: #0F172A;
+.volta-bg-dark {
+  background-color: #79242F;
+  color: #ffffff;
 }
 
-.modern-text-muted {
-  color: #64748B;
+.volta-text {
+  color: #ffffff;
 }
 
-.modern-border {
-  border-color: #E2E8F0;
+.volta-text-muted {
+  color: rgba(255, 255, 255, 0.7);
 }
 
-.modern-primary {
-  color: #2563EB;
+.volta-border {
+  border-color: #7A2836;
 }
 
-/* Status badge styles matching the image */
-.status-active {
-  background-color: #DCFCE7;
-  color: #059669;
-  border: 1px solid #BBF7D0;
+.volta-highlight {
+  color: #C94E64;
 }
 
-.status-planning {
-  background-color: #DBEAFE;
-  color: #2563EB;
-  border: 1px solid #BFDBFE;
+/* Chart colors */
+.volta-chart-blue {
+  color: #4B8BDF;
 }
 
-.status-completed {
-  background-color: #F3F4F6;
-  color: #6B7280;
-  border: 1px solid #E5E7EB;
+.volta-chart-orange {
+  color: #FF9F5A;
 }
 
-/* Button styles with modern theme */
-.modern-btn {
-  background-color: #2563EB;
+.volta-chart-red {
+  color: #F5515F;
+}
+
+.volta-chart-green {
+  color: #4BD763;
+}
+
+/* Button styles with Volta theme */
+.volta-btn {
+  background-color: #8F2D3B;
   color: white;
   transition: background-color 0.2s;
 }
 
-.modern-btn:hover {
-  background-color: #1D4ED8;
+.volta-btn:hover {
+  background-color: #79242F;
 }
 
-/* Card styles matching the image */
-.modern-card {
-  background-color: white;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-}
-
-.modern-card:hover {
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+/* Card styles with Volta theme */
+.volta-card {
+  border-color: #8F2D3B;
 }
