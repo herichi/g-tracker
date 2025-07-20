@@ -3,7 +3,6 @@
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
-  background-color: white;
 }
 
 .logo {
@@ -13,10 +12,10 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #3b82f6aa);
+  filter: drop-shadow(0 0 2em #2563EBaa);
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #3b82f6aa);
+  filter: drop-shadow(0 0 2em #2563EBaa);
 }
 
 @keyframes logo-spin {
@@ -36,10 +35,72 @@
 
 .card {
   padding: 2em;
-  background-color: white;
-  color: black;
 }
 
 .read-the-docs {
-  color: #666;
+  color: #888;
+}
+
+/* Modern theme specific styles matching the uploaded image */
+.modern-bg {
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+.modern-text {
+  color: #0F172A;
+}
+
+.modern-text-muted {
+  color: #64748B;
+}
+
+.modern-border {
+  border-color: #E2E8F0;
+}
+
+.modern-primary {
+  color: #2563EB;
+}
+
+/* Status badge styles matching the image */
+.status-active {
+  background-color: #DCFCE7;
+  color: #059669;
+  border: 1px solid #BBF7D0;
+}
+
+.status-planning {
+  background-color: #DBEAFE;
+  color: #2563EB;
+  border: 1px solid #BFDBFE;
+}
+
+.status-completed {
+  background-color: #F3F4F6;
+  color: #6B7280;
+  border: 1px solid #E5E7EB;
+}
+
+/* Button styles with modern theme */
+.modern-btn {
+  background-color: #2563EB;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.modern-btn:hover {
+  background-color: #1D4ED8;
+}
+
+/* Card styles matching the image */
+.modern-card {
+  background-color: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.modern-card:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
