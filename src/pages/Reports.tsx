@@ -123,7 +123,7 @@ const Reports: React.FC = () => {
           issueTransmittalNo: item.issue_transmittal_no,
           dwgNo: item.dwg_no,
           description: item.description,
-          panelTag: item.tag,
+          panelTag: item.panel_tag,
           unitQty: item.unit_qty || undefined,
           ifpQtyNos: item.ifp_qty_nos,
           ifpQtyMeasurement: item.ifp_qty || undefined,

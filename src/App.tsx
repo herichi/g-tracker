@@ -16,6 +16,7 @@ import Projects from "./pages/Projects";
 import ProjectDetail from "./pages/ProjectDetail";
 import Panels from "./pages/Panels";
 import PanelDetail from "./pages/PanelDetail";
+import PanelNew from "./pages/PanelNew";
 import BuildingDetail from "./pages/BuildingDetail";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
@@ -86,6 +87,16 @@ const App = () => (
                     <ProtectedRoute>
                       <AppLayout>
                         <Panels />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/panel/new" 
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <PanelNew />
                       </AppLayout>
                     </ProtectedRoute>
                   } 
