@@ -25,7 +25,7 @@ interface DatabaseItem {
   issue_transmittal_no: string;
   dwg_no: string;
   description: string;
-  tag: string;
+  panel_tag: string;
   unit_qty: number | null;
   ifp_qty_nos: number;
   ifp_qty: number | null;
